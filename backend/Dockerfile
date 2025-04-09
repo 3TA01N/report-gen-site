@@ -28,7 +28,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1 
  
 # Install dependencies first for caching benefit
-RUN pip install --upgrade pip 
+RUN pip install --upgrade pip setuptools wheel
 COPY requirements.txt /app/ 
 RUN pip install --no-cache-dir -r requirements.txt
 

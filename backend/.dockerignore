@@ -84,6 +84,10 @@ celerybeat.pid
 
 # Environments
 .env
+.env.local
+.env.prod
+#venv
+report_gen_prototype/
 .env*
 .venv
 env/

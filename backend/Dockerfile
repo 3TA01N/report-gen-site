@@ -59,4 +59,7 @@ ENV PYTHONUNBUFFERED=1
 USER appuser
  
 # Expose the application port
-EXPOSE 8000 
+EXPOSE 10000 
+
+CMD ["bash", "-c", "python3 manage.py collectstatic --noinput && python3 manage.py migrate --noinput && gunicorn --bind 0.0.0.0:$PORT --workers 3 reportsite.wsgi:application"]
+

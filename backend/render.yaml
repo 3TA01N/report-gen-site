@@ -3,9 +3,10 @@
     runtime: docker
     name: report-site
     startCommand: >
+      echo "Starting Gunicorn..." &&
+      gunicorn reportsite.wsgi:application --bind 0.0.0.0:$PORT
+    preDeployCommand: |
       echo "Collecting static..." &&
       python manage.py collectstatic --noinput &&
       echo "Migrating..." &&
-      python manage.py migrate --noinput &&
-      echo "Starting Gunicorn..." &&
-      gunicorn reportsite.wsgi:application --bind 0.0.0.0:$PORT
+      python manage.py migrate --noinput

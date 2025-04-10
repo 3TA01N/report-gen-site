@@ -60,6 +60,8 @@ USER appuser
  
 # Expose the application port
 EXPOSE 10000 
+RUN python3 manage.py collectstatic --noinput
 
-CMD ["bash", "-c", "python3 manage.py collectstatic --noinput && python3 manage.py migrate --noinput && gunicorn --bind 0.0.0.0:$PORT --workers 3 reportsite.wsgi:application"]
+RUN python3 manage.py migrate --noinput
 
+CMD ["gunicorn", "--bind", "0.0.0.0:10000", "--workers", "3", "reportsite.wsgi:application"]

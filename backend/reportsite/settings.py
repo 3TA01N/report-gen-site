@@ -14,7 +14,7 @@ from pathlib import Path
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
-
+import dj_database_url
 load_dotenv('.env.local')
 
 
@@ -43,6 +43,7 @@ CSRF_TRUSTED_ORIGINS = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "http://127.0.0.
 # Application definition
 
 INSTALLED_APPS = [
+    'storages',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -141,18 +142,30 @@ WSGI_APPLICATION = 'reportsite.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 if os.getenv('DJANGO_ENV') == 'production':
+    # AWS
+    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+
+    # File storage
+    AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME")
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.{}' .format(
-                os.getenv('DATABASE_ENGINE', 'postgresql')
-            ),
-            'NAME': os.getenv('DATABASE_NAME', 'db.sqlite3'),
-            'USER': os.getenv('DATABASE_USERNAME', 'reportsiteuser'),
-            'PASSWORD': os.getenv('DATABASE_PASSWORD', 'password'),
-            'HOST': os.getenv('DATABASE_HOST', '127.0.0.1'),
-            'PORT': os.getenv('DATABASE_PORT', 5432),
-        }
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL')
+        )
     }
+    #DATABASES = {
+    #    'default': {
+    #        'ENGINE': 'django.db.backends.{}' .format(
+    #            os.getenv('DATABASE_ENGINE', 'postgresql')
+    #        ),
+    #        'NAME': os.getenv('DATABASE_NAME', 'db.sqlite3'),
+    #        'USER': os.getenv('DATABASE_USERNAME', 'reportsiteuser'),
+    #        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'password'),
+    #        'HOST': os.getenv('DATABASE_HOST', '127.0.0.1'),
+    #        'PORT': os.getenv('DATABASE_PORT', 5432),
+    #    }
+    #}
 else:
     DATABASES = {
         'default': {

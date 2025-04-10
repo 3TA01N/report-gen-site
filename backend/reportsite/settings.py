@@ -29,15 +29,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
-print("KEY:",os.getenv("DJANGO_SECRET_KEY"))
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+print("KEY:",os.environ.get("DJANGO_SECRET_KEY"))
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.getenv("DEBUG", default=0))
+DEBUG = bool(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
-CORS_ALLOWED_ORIGINS = os.getenv("DJANGO_CORS_ALLOWED_ORIGINS", "'http://localhost:5173'").split(",")
-CSRF_TRUSTED_ORIGINS = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "http://127.0.0.1").split(",")
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
+CORS_ALLOWED_ORIGINS = os.environ.get("DJANGO_CORS_ALLOWED_ORIGINS", "'http://localhost:5173'").split(",")
+CSRF_TRUSTED_ORIGINS = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "http://127.0.0.1").split(",")
 
 # Application definition
 
@@ -140,7 +140,7 @@ WSGI_APPLICATION = 'reportsite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-if os.getenv('DJANGO_ENV') == 'production':
+if os.environ.get('DJANGO_ENV') == 'production':
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL')
@@ -149,13 +149,13 @@ if os.getenv('DJANGO_ENV') == 'production':
     #DATABASES = {
     #    'default': {
     #        'ENGINE': 'django.db.backends.{}' .format(
-    #            os.getenv('DATABASE_ENGINE', 'postgresql')
+    #            os.environ.get('DATABASE_ENGINE', 'postgresql')
     #        ),
-    #        'NAME': os.getenv('DATABASE_NAME', 'db.sqlite3'),
-    #        'USER': os.getenv('DATABASE_USERNAME', 'reportsiteuser'),
-    #        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'password'),
-    #        'HOST': os.getenv('DATABASE_HOST', '127.0.0.1'),
-    #        'PORT': os.getenv('DATABASE_PORT', 5432),
+    #        'NAME': os.environ.get('DATABASE_NAME', 'db.sqlite3'),
+    #        'USER': os.environ.get('DATABASE_USERNAME', 'reportsiteuser'),
+    #        'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'password'),
+    #        'HOST': os.environ.get('DATABASE_HOST', '127.0.0.1'),
+    #        'PORT': os.environ.get('DATABASE_PORT', 5432),
     #    }
     #}
 else:
@@ -201,13 +201,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-USE_S3 = os.getenv('DJANGO_ENV') == 'production'
+USE_S3 = os.environ.get('DJANGO_ENV') == 'production'
 
 if USE_S3:
     # aws settings
-    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
     AWS_DEFAULT_ACL = 'public-read'
     AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}

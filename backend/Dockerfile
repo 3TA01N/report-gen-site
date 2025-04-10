@@ -57,4 +57,5 @@ ENV PYTHONUNBUFFERED=1
  
 # Switch to non-root user
 USER appuser
- 
+
+RUN pip install --no-cache-dir gunicorn

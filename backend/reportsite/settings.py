@@ -15,7 +15,6 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 import dj_database_url
-#load_dotenv('.env.local')
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

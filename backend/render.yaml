@@ -1,4 +1,7 @@
+previews:
+  generation: automatic 
 # A web service that builds from a Dockerfile
+services:
   - type: web
     runtime: docker
     name: report-site

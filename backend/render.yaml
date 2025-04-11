@@ -6,7 +6,13 @@
       echo "Starting Gunicorn..." &&
       gunicorn reportsite.wsgi:application --bind 0.0.0.0:$PORT
     preDeployCommand: |
-      echo "Collecting static..." &&
+      echo "Starting pre-deployment..." &&
+      sleep 5 &&
+      echo "Collecting static files..." &&
       python manage.py collectstatic --noinput &&
-      echo "Migrating..." &&
-      python manage.py migrate --noinput
+      echo "Static collection complete!" &&
+      sleep 5 &&
+      echo "Running migrations..." &&
+      python manage.py migrate --noinput &&
+      echo "Migrations complete!" &&
+      echo "Pre-deployment done!"

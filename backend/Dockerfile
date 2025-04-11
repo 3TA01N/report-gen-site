@@ -32,7 +32,6 @@ RUN pip install --upgrade pip setuptools wheel
 COPY requirements.txt /app/ 
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN echo "Listing contents of /usr/:" && ls -al /usr/
 # Stage 2: Production stage
 FROM python:3.11-slim AS production
  

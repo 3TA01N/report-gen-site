@@ -32,6 +32,7 @@ RUN pip install --upgrade pip setuptools wheel
 COPY requirements.txt /app/ 
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN echo "Listing contents of /usr/:" && ls -al /usr/
 # Stage 2: Production stage
 FROM python:3.11-slim AS production
  
@@ -56,5 +57,7 @@ ENV PYTHONUNBUFFERED=1
  
 # Switch to non-root user
 USER appuser
+ 
 
-RUN pip install --no-cache-dir gunicorn
+CMD ["gunicorn", "myproject.wsgi:application", "--bind", "0.0.0.0:$PORT"]
+

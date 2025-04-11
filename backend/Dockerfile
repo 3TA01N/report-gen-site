@@ -59,5 +59,5 @@ ENV PYTHONUNBUFFERED=1
 USER appuser
  
 
-CMD ["gunicorn", "myproject.wsgi:application", "--bind", "0.0.0.0:$PORT"]
+CMD ["gunicorn", "myproject.wsgi:application", "--bind", "0.0.0.0:10000"]
 

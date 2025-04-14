@@ -21,7 +21,8 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-#load_dotenv('.env.local')
+if os.getenv('RENDER') is None:
+    load_dotenv('.env.local')
 
 
 # Quick-start development settings - unsuitable for production

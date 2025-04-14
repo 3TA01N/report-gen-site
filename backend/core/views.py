@@ -1,11 +1,12 @@
 from rest_framework import viewsets, status
 from .serializers import AgentSerializer, ReportSerializer, PaperSerializer, TeamLeadSerializer, UserLoginSerializer, UserRegistrationSerializer, CustomUserSerializer 
-from .models import Agent, Report, Paper, TeamLead
+from .models import Agent, Report, Paper, TeamLead, TokenUsage
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import os
+from django.utils.timezone import now
 from django.core.files.storage import default_storage
 import traceback
 from reportsite.storage_backends import PrivateMediaStorage
@@ -554,7 +555,12 @@ class ReportView(viewsets.ModelViewSet):
         with transaction.atomic():
             name = request.data.get('name')
             user = request.user
-            #check token limit
+            #check daily token limit reached
+            today = now().date()
+            usage, _ = TokenUsage.objects.get_or_create(date=today)
+            if usage.tokens_used > settings.DAILY_TOKEN_LIMIT:
+                return Response({"error": "total max token count for today exceeded"}, status = status.HTTP_400_BAD_REQUEST)
+            #check token limit for user
             if (user.daily_input_token_count > 4000 or user.daily_output_token_count > 4000):
                 return Response({"error": "user has exceeded max token count for today"}, status = status.HTTP_400_BAD_REQUEST)
             username = request.user.username
@@ -677,10 +683,13 @@ class ReportView(viewsets.ModelViewSet):
                         report_text = report_output["final_report"]
                         input_tokens = report_output["input_tokens"]
                         output_tokens = report_output["output_tokens"]
+                        
                         #update the user's daily token count
                         user.daily_input_token_count += input_tokens
                         user.daily_output_token_count += output_tokens
                         user.save()
+                        usage.tokens_used += input_tokens + output_tokens
+                        usage.save()
                         chat_log = report_output["chat_log"]
                         worker_team = report_output["worker_team"]
                         report_name = f"report_{report.name}.txt"

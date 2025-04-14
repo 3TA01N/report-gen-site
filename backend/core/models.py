@@ -12,7 +12,13 @@ class CustomUser(AbstractUser):
 
     def __str__(self) -> str:
         return self.email
-    
+
+from django.utils.timezone import now
+
+class TokenUsage(models.Model):
+    date = models.DateTimeField(default=now)
+    tokens_used = models.IntegerField(default=0)
+
 def paper_upload(instance, filename):
     user_directory = str(instance.user.username)
     return os.path.join(user_directory, 'papers', filename)

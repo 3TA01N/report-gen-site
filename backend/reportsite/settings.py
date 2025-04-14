@@ -21,7 +21,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-#load_dotenv('.env.local')
+load_dotenv('.env.local')
 
 
 # Quick-start development settings - unsuitable for production
@@ -30,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-
+DAILY_TOKEN_LIMIT = os.environ.get('DAILY_TOKEN_LIMIT')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get("DEBUG", default=0))
 

@@ -7,7 +7,7 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 
-load_dotenv('../../.env.prod')
+load_dotenv('../../.env.local')
 
 class openai_engine:
     def __init__(self, model):

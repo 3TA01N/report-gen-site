@@ -9,7 +9,12 @@ interface InstructionsProps {
 
 const Instructions: React.FC<InstructionsProps> = ({ startingShow }) => {
     const [show, setShow] = useState(startingShow);
-  
+
+    const closeInstr = () => {
+      localStorage.removeItem("showInstr");
+      setShow(false)
+    }
+    
     return (
       <>
         <button
@@ -29,7 +34,7 @@ const Instructions: React.FC<InstructionsProps> = ({ startingShow }) => {
                   <button
                     type="button"
                     className="btn-close"
-                    onClick={() => setShow(false)}
+                    onClick={() => closeInstr()}
                   ></button>
                 </div>
                 <div className="modal-body">
@@ -76,7 +81,7 @@ const Instructions: React.FC<InstructionsProps> = ({ startingShow }) => {
                   <button
                     type="button"
                     className="btn btn-secondary"
-                    onClick={() => setShow(false)}
+                    onClick={() => closeInstr()}
                   >
                     Close
                   </button>

@@ -52,9 +52,7 @@ function Home () {
           setContext(uploaded);
         }
     }
-    useEffect(() => {
-        localStorage.removeItem("showInstr");
-      }, []);
+
       
     const formSubmit = (event: React.FormEvent) => {
         event.preventDefault()

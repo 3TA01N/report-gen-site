@@ -37,6 +37,13 @@ function Register () {
         }
     }
     useEffect(() => {
+        if (location.search) {
+            // Remove query params without reloading
+            navigate(location.pathname, { replace: true });
+        }
+    }, [location, navigate]);
+    
+    useEffect(() => {
         setLoginData({
             email: formData.email,
             password: formData.password1
@@ -103,7 +110,7 @@ function Register () {
                 </div>
             )}
             <h2>Register</h2>
-            <form>
+            <form onSubmit={handleSubmit} autoComplete="off">
                 <label>username:</label><br/>
                 <input type="text" name = "username" value={formData.username} onChange={handleChange}>
                 </input>
@@ -117,7 +124,7 @@ function Register () {
                 <label>confirm password:</label><br/>
                 <input type="password" name = "password2" value={formData.password2} onChange={handleChange}></input>
                 <br/>
-                <button type="submit" disabled={isLoading} onClick={handleSubmit}>Register</button>
+                <button type="submit" disabled={isLoading}>Register</button>
             </form>
         </div>
     )

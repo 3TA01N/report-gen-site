@@ -58,8 +58,6 @@ pdfminer==20191125
 pdfminer.six==20250327
 pillow==11.1.0
 propcache==0.2.1
-psycopg==3.2.6
-psycopg2==2.9.10
 pycparser==2.22
 pycryptodome==3.22.0
 pydantic==2.10.4

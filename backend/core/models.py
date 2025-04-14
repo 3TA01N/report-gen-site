@@ -5,6 +5,8 @@ from django.contrib.auth.models import AbstractUser
 
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
+    daily_input_token_count = models.IntegerField(default=0)
+    daily_output_token_count = models.IntegerField(default=0)
     USERNAME_FIELD="email"
     REQUIRED_FIELDS=["username"]
 

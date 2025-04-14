@@ -6,15 +6,19 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import os
+from django.core.files.storage import default_storage
+import traceback
+from reportsite.storage_backends import PrivateMediaStorage
 import json
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from django.core.files.base import ContentFile
 from django.db import transaction
-from core.chatbot_functionality.KnowledgeBase import KnowledgeBase
+from core.chatbot_functionality.KnowledgeBase import KnowledgeBase, s3Interface
 from core.chatbot_functionality.run_meeting import run_meeting
 from datetime import datetime
 import shutil
+import boto3
 from django.forms.models import model_to_dict
 from pdfminer.high_level import extract_text
 
@@ -123,9 +127,14 @@ class AgentView(viewsets.ModelViewSet):
                 return Response({"error": "Agent not found for this user."}, status=status.HTTP_404_NOT_FOUND)
 
             agent.stored_papers.clear()
-            path = os.path.join(settings.BASE_DIR, f"{user.username}_knowledge_bases", f'agent', f"{agent.name}")
-            print("Destroy path:", path)
-            shutil.rmtree(path)
+            if (settings.USE_S3):
+                s3 = s3Interface(bucket_name=settings.AWS_STORAGE_BUCKET_NAME)
+                path = os.path.join(f"{user.username}_knowledge_bases", f'agent', f"{agent.name}")
+                s3.delete_folder(path)
+            else:
+                path = os.path.join(settings.BASE_DIR, f"{user.username}_knowledge_bases", f'agent', f"{agent.name}")
+                print("Destroy path:", path)
+                shutil.rmtree(path)
             agent.delete()
             return Response({"message": "Agent successfully deleted"}, status = status.HTTP_204_NO_CONTENT)
 
@@ -145,23 +154,58 @@ class AgentView(viewsets.ModelViewSet):
             files = request.FILES.getlist('files')
             selFiles = request.POST.getlist('selFiles')
             
-            #Now, create a knowledge base instance in root
             knowledge_path = f"{username}_knowledge_bases/agent/{name}"
-            print("Creating agent knowledge base at ", knowledge_path)
-            agent_knowledge = KnowledgeBase(knowledge_path, embedder_name="HuggingFaceEmbeddings")
             #Add papers to knowledge base
 
             #print(request.data)
+
+            chunker = RecursiveCharacterTextSplitter(
+                                chunk_size=200,
+                                chunk_overlap=20,
+                                length_function=len,
+                                is_separator_regex=False,
+                            )
+            #connect keys of papers in selFiles to agent obj
+            if (settings.USE_S3):
+                try:
+                    s3int = s3Interface(bucket_name = settings.AWS_STORAGE_BUCKET_NAME)
+                    agent_knowledge = KnowledgeBase('temp', embedder_name="HuggingFaceEmbeddings")
+                except Exception as e:
+                    shutil.rmtree('temp')
+                    return Response(e, status=status.HTTP_400_BAD_REQUEST)
+
+            else:
+                
+                print("Creating agent knowledge base at ", knowledge_path)
+                agent_knowledge = KnowledgeBase(knowledge_path, embedder_name="HuggingFaceEmbeddings")
             papers = []
             
+            #for each new paper uploaded: create the paper, and upload it the the kb
             for file in files:
                 file_type = os.path.splitext(file.name)[1]
                 
                 file_type = file_type.lstrip(".")
-                print("FILE TYPE:", file_type)
-                if ("txt" not in file_type and "pdf" not in file_type):
-                    print("no text/pdf")
-                    return JsonResponse({"error": "File is not pdf/text. Is of type {file_type}"}, status=400)
+                print(file_type)
+                file_content = ""
+                if file_type == "txt":
+                    file_content = file.read()
+                        
+                elif file_type == "pdf":
+                    with open('temppdf', 'wb+') as destination:
+                        for chunk in file.chunks():
+                            destination.write(chunk)
+
+                    file_content = extract_text('temppdf')
+                    os.remove('temppdf')
+
+                else:
+                    return JsonResponse({"error": f"File is not pdf/text. Is of type {file_type}"}, status=400)
+                
+                print("Text to be embedded:", file_content)
+                paper_name = file.name
+                file_content = [file_content]
+                agent_knowledge.upload_knowledge_1(text= file_content, source_name= paper_name, chunker = chunker)
+                    
                 paper = Paper(file = file, name = file.name, file_type = file_type, user=user)
                 #checking if same name paper alr exists
 
@@ -171,12 +215,7 @@ class AgentView(viewsets.ModelViewSet):
                 paper.save()
                 papers.append(paper)
 
-            print("Papers created")
-            
-            #papers created
-            
-            
-            print("Knowledge base creation")
+
             agent = Agent(
                 name = name,
                 role = role,
@@ -189,56 +228,57 @@ class AgentView(viewsets.ModelViewSet):
             agent.save()
             agent = Agent.objects.get(name=agent.name, user = user)
 
-            chunker = RecursiveCharacterTextSplitter(
-                                chunk_size=200,
-                                chunk_overlap=20,
-                                length_function=len,
-                                is_separator_regex=False,
-                            )
-            #connect keys of papers in selFiles to agent obj
+            #add papers to agent list
+            for paper in papers:
+                agent.stored_papers.add(paper)
+                
 
             for paper_name in selFiles:
-                paper_ref = Paper.objects.get(name=paper_name, user = user) 
+                paper_ref = Paper.objects.get(name=paper_name, user = user)
                 agent.stored_papers.add(paper_ref)
-                #Embed papers
-                #parse text
                 file_content = ""
-                file_path = paper_ref.file.path
-                #This is where you handle parsing the file text, depending on the format
-                if paper_ref.file_type == "txt":
-                    with open(file_path, 'r') as file:
-                        file_content = file.read()
+                if (settings.USE_S3):
+                    s3_path = os.path.join("media", username, "papers", paper_name)
+                    if default_storage.exists(s3_path):
+                        with default_storage.open(s3_path, 'r') as paper_file:
+                            if paper_ref.file_type == "txt":
+                                file_content = paper_file.read()
+                            if paper_ref.file_type == "pdf":
+                                with open('temppdf', 'wb+') as destination:
+                                    for chunk in paper_file.chunks():
+                                        destination.write(chunk)
 
-                if paper_ref.file_type == "pdf":
-                    file_content = extract_text(file_path)
+                                file_content = extract_text('temppdf')
+                                os.remove('temppdf')
+                    else:
+                        print("ERROR: file path doesnt exist in s3")
+                else:
+                    file_path = paper_ref.file.path
+                    #This is where you handle parsing the file text, depending on the format
+                    if paper_ref.file_type == "txt":
+                        with open(file_path, 'r') as file:
+                            file_content = file.read()
+
+                    if paper_ref.file_type == "pdf":
+                        file_content = extract_text(file_path)
                 print("file content: ", file_content)
                 #chunkers expect a list, not enclosing text in list yields 1 char chunks
                 file_content = [file_content]
                 agent_knowledge.upload_knowledge_1(text= file_content, source_name= paper_name, chunker = chunker)
             
-            for paper in papers:
-                agent.stored_papers.add(paper)
-                #embed papers and parse text
-                
-                file_content = ""
-                file_path = paper.file.path
-                if paper.file_type == "txt":
-                    with open(file_path, 'r') as file:
-                        file_content = file.read()
-                        
-                if paper.file_type == "pdf":
-                    file_content = extract_text(file_path)
-                print("Text to be embedded:", file_content)
-                paper_name = paper.name
-                file_content = [file_content]
-                agent_knowledge.upload_knowledge_1(text= file_content, source_name= paper_name, chunker = chunker)
+            if (settings.USE_S3):
+                s3int.close_s3(remote_folder=knowledge_path, local_folder='temp')
+
+            
 
             
             print("Papers added as key")
             return Response("Agents/papers created")
 
 
-
+def get_signed_url(file_path):
+    storage = PrivateMediaStorage()
+    return storage.url(file_path)
 
 class PaperView(viewsets.ModelViewSet):
     parser_class = (MultiPartParser)
@@ -262,7 +302,13 @@ class PaperView(viewsets.ModelViewSet):
             queryset = queryset.filter(name=paper_name)
 
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        data = serializer.data
+
+        for item, paper in zip(data, queryset):
+            if paper.file:
+                item["signed_url"] = get_signed_url(paper.file.name)
+
+        return Response(data, status=status.HTTP_200_OK)
     
 
     def create(self, request, *args, **kwargs):
@@ -297,8 +343,16 @@ class PaperView(viewsets.ModelViewSet):
         except Paper.DoesNotExist:
             return Response({"error": "paper not found for this user."}, status=status.HTTP_404_NOT_FOUND)
 
+
+        signed_url = None
+        if paper.file:
+            storage = PrivateMediaStorage()
+            signed_url = storage.url(paper.file.name)
+ 
         serializer = self.get_serializer(paper)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        data = serializer.data
+        data["signed_url"] = signed_url
+        return Response(data, status=status.HTTP_200_OK)
     
     def destroy(self, request, *args, **kwargs):
         with transaction.atomic():
@@ -308,10 +362,15 @@ class PaperView(viewsets.ModelViewSet):
                 paper = Paper.objects.get(user=user, id=paper_id)
             except Paper.DoesNotExist:
                 return Response({"error": "Paper not found for this user."}, status=status.HTTP_404_NOT_FOUND)
-
-            path = os.path.join(settings.MEDIA_ROOT, user.username, f"papers", paper.name)
-            print("Destroy path:", path)
-            os.remove(path)
+            if settings.USE_S3:
+                file_field = paper.file
+                file_name = file_field.name
+                if file_field and file_field.storage.exists(file_name):
+                    file_field.delete(save=False)
+            else:
+                path = os.path.join(settings.MEDIA_ROOT, user.username, f"papers", paper.name)
+                print("Destroy path:", path)
+                os.remove(path)
             paper.delete()
             return Response({"message": "Paper successfully deleted"}, status = status.HTTP_204_NO_CONTENT)
             
@@ -359,10 +418,14 @@ class TeamLeadView(viewsets.ModelViewSet):
                 lead = TeamLead.objects.get(user=user, name=lead_name)
             except TeamLead.DoesNotExist:
                 return Response({"error": "Lead not found for this user."}, status=status.HTTP_404_NOT_FOUND)
-
-            path = os.path.join(settings.BASE_DIR, f"{user.username}_knowledge_bases", 'leads', lead.name)
-            print("Destroy path:", path)
-            shutil.rmtree(path)
+            if (settings.USE_S3):
+                s3 = s3Interface(bucket_name=settings.AWS_STORAGE_BUCKET_NAME)
+                path = os.path.join(f"{user.username}_knowledge_bases", f'leads', f"{lead.name}")
+                s3.delete_folder(path)
+            else:
+                path = os.path.join(settings.BASE_DIR, f"{user.username}_knowledge_bases", 'leads', lead.name)
+                print("Destroy path:", path)
+                shutil.rmtree(path)
             lead.delete()
             return Response({"message": "lead successfully deleted"}, status = status.HTTP_204_NO_CONTENT)
         
@@ -377,9 +440,13 @@ class TeamLeadView(viewsets.ModelViewSet):
             if TeamLead.objects.filter(name=name, user=user).exists():
                 return Response({"error": "Lead name already exists for this user."}, status = status.HTTP_400_BAD_REQUEST)
             else:
-                
                 knowledge_path = f"{username}_knowledge_bases/leads/{name}"
-                lead_knowledge = KnowledgeBase(knowledge_path, embedder_name="HuggingFaceEmbeddings")
+                if (settings.USE_S3):
+                    s3int = s3Interface(bucket_name = settings.AWS_STORAGE_BUCKET_NAME)
+                    lead_knowledge = KnowledgeBase('temp', embedder_name="HuggingFaceEmbeddings")
+                    s3int.close_s3(knowledge_path, 'temp')
+                else:
+                    lead_knowledge = KnowledgeBase(knowledge_path, embedder_name="HuggingFaceEmbeddings")
                 print("Knowledge base creation")
                 lead = TeamLead(
                     kb_path = knowledge_path,
@@ -464,11 +531,20 @@ class ReportView(viewsets.ModelViewSet):
                 report = Report.objects.get(user=user, name=report_name)
             except Report.DoesNotExist:
                 return Response({"error": "Report not found for this user."}, status=status.HTTP_404_NOT_FOUND)
-
-            report_path = os.path.join(settings.MEDIA_ROOT, user.username, "output", "report_" + report.name + ".txt")
-            chat_path = os.path.join(settings.MEDIA_ROOT, user.username, "report_logs", "chatlog_" + report.name + ".txt")
-            os.remove(report_path)
-            os.remove(chat_path)
+            if settings.USE_S3:
+                output_file_field = report.output.file
+                output_file_name = output_file_field.name
+                chat_log_file_field = report.chat_log.file
+                chat_log_file_name = chat_log_file_field.name
+                if output_file_field and output_file_field.storage.exists(output_file_name):
+                    output_file_field.delete(save=False)
+                if chat_log_file_field and chat_log_file_field.storage.exists(chat_log_file_name):
+                    chat_log_file_field.delete(save=False)
+            else:
+                report_path = os.path.join(settings.MEDIA_ROOT, user.username, "output", "report_" + report.name + ".txt")
+                chat_path = os.path.join(settings.MEDIA_ROOT, user.username, "report_logs", "chatlog_" + report.name + ".txt")
+                os.remove(report_path)
+                os.remove(chat_path)
             report.delete()
             return Response({"message": "Report successfully deleted"}, status = status.HTTP_204_NO_CONTENT)
             
@@ -478,6 +554,9 @@ class ReportView(viewsets.ModelViewSet):
         with transaction.atomic():
             name = request.data.get('name')
             user = request.user
+            #check token limit
+            if (user.daily_input_token_count > 4000 or user.daily_output_token_count > 4000):
+                return Response({"error": "user has exceeded max token count for today"}, status = status.HTTP_400_BAD_REQUEST)
             username = request.user.username
             #checks for duplicate names
             if Report.objects.filter(name=name, user = user).exists():
@@ -527,6 +606,7 @@ class ReportView(viewsets.ModelViewSet):
                       "temperature": temperature,
                       "engine": engine,
                       "lead_path": lead_obj.kb_path,
+                      "lead_name": lead_obj.name,
                       "draw_from_knowledge": draw_from_knowledge,
                       "user": username
                       }
@@ -595,12 +675,18 @@ class ReportView(viewsets.ModelViewSet):
                     
                      
                         report_text = report_output["final_report"]
+                        input_tokens = report_output["input_tokens"]
+                        output_tokens = report_output["output_tokens"]
+                        #update the user's daily token count
+                        user.daily_input_token_count += input_tokens
+                        user.daily_output_token_count += output_tokens
+                        user.save()
                         chat_log = report_output["chat_log"]
                         worker_team = report_output["worker_team"]
                         report_name = f"report_{report.name}.txt"
                         chatlog_name = f"chatlog_{report.name}.txt"
-                        report.output.save(report_name, ContentFile(report_text))
-                        report.chat_log.save(chatlog_name, ContentFile(chat_log))
+                        report.output.save(report_name, ContentFile(report_text.encode('utf-8')))
+                        report.chat_log.save(chatlog_name, ContentFile(chat_log.encode('utf-8')))
                         #map agents to the report
                         for i in worker_team:
                             agent_ref = Agent.objects.get(name=i, user = user)
@@ -608,6 +694,7 @@ class ReportView(viewsets.ModelViewSet):
                         
                         yield json.dumps("END") + '\n'
                     except Exception as e:
+                        traceback.print_exc()
                         error_response = {
                             "status": "error",
                             "message": str(e)

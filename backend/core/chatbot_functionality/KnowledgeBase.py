@@ -6,17 +6,22 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from .constants import embedders_dict
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import json
+import shutil
 import faiss
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from langchain_community.docstore.in_memory import InMemoryDocstore
 import uuid
+from django.conf import settings
+
 import numpy as np
 import re
+import boto3
 
 
 """Knowledge base class: an interface to interact with a local FAISS knowledge base.
  """
+
 
 #Creates the folder, as well as id_counter local storage
 def instantiate_empty_vector_store(path, embedder, embedder_name):
@@ -39,6 +44,53 @@ def instantiate_empty_vector_store(path, embedder, embedder_name):
     with open(f"""{path}/info.txt""", "w") as file:
         file.write(f"{embedder_name}\n")
         file.close()
+
+class s3Interface():
+    def __init__(self, bucket_name):
+        self.bucket_name = bucket_name
+
+        self.s3_client = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, region_name=settings.AWS_REGION)
+    
+    def delete_folder(self, remote_folder):
+        response = self.s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=remote_folder)
+
+        if 'Contents' in response:
+            delete_keys = [{'Key': obj['Key']} for obj in response['Contents']]
+            self.s3_client.delete_objects(
+                Bucket=self.bucket_name,
+                Delete={'Objects': delete_keys}
+            )
+
+    def close_s3(self, remote_folder, local_folder):
+        for root, dirs, files in os.walk(local_folder):
+            for file in files:
+                local_path = os.path.join(root, file)
+                relative_path = os.path.relpath(local_path, local_folder)
+                s3_key = os.path.join(remote_folder, relative_path).replace("\\", "/")
+
+                self.s3_client.upload_file(local_path, self.bucket_name, s3_key)
+        shutil.rmtree(local_folder)
+        
+    #saves the remote folder from s3 into the destination path
+    def open_s3(self, remote_folder,destination_path):
+
+        paginator = self.s3_client.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=self.bucket_name, Prefix=remote_folder)
+            
+        for page in pages:
+            for obj in page.get('Contents', []):
+                s3_key = obj['Key']
+                rel_path = os.path.relpath(s3_key, remote_folder)
+                local_path = os.path.join(destination_path, rel_path)
+
+                # Create local directory if it doesn't exist
+                os.makedirs(os.path.dirname(local_path), exist_ok=True)
+
+                print(f"Downloading {s3_key} → {local_path}")
+                self.s3_client.download_file(self.bucket_name, s3_key, local_path)
+
+
 
 #id_counter.txt stores the current vector id(primitive solution allowing us to access vector by id later, will find more elegant solution)
 class KnowledgeBase():

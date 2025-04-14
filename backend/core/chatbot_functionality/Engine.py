@@ -1,19 +1,25 @@
 import ollama
 import json
+import tiktoken
+
 
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
 
-load_dotenv('.env.prod')
+#load_dotenv('../../.env.prod')
 
 class openai_engine:
     def __init__(self, model):
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"),)
+        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         self.model = model
     def to_string(self):
         print("openai", self.model)
     def generate(self, query, format):
+        encoding = tiktoken.encoding_for_model("gpt-4o-mini")
+        tokens = encoding.encode(query)
+        print("TOKEN LENGTH FOR QUERY:", len(tokens))
+        
         if format == {}:
             response = self.client.responses.create(
                 model=self.model,
@@ -25,7 +31,10 @@ class openai_engine:
                 input=query,
                 text = format
             )
-        return (response.output_text)
+        print("FULL RESPONSE TEXT:", response.output_text)
+        input_tokens = response.usage.input_tokens
+        output_tokens = response.usage.output_tokens
+        return (response.output_text, [input_tokens, output_tokens])
     
 #Defines a ollama engine.
 class ollama_engine:

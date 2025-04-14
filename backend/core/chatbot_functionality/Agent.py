@@ -11,7 +11,11 @@ class Conversation:
         self.chat_log = []
         self.engine = engine
         self.team = team
+        self.input_token_total = 0
+        self.output_token_total = 0
 
+    def reset_chat(self):
+        self.chat_log = []
     def to_string(self):
         print("Team:")
         names = ", ".join(name.lower() for name in self.team.keys())
@@ -36,11 +40,12 @@ class Conversation:
         #Given an agent_name, answer the response, and format response into the log
         str_log = self.chat_log_to_string()
         if (agent_name in self.team):
-
+            
             agent = self.team[agent_name]
-            print("ANSWERING WITH FORMAT", format)
-            response = agent.answer_query(prompt, str_log, self.engine, query_kb = draw_from_knowledge, vectors = 3, debug_log = False, format=format)
+            response, tokens = agent.answer_query(prompt, str_log, self.engine, query_kb = draw_from_knowledge, vectors = 3, debug_log = False, format=format)
             log_entry = self.add_to_log(agent_name, prompt, response)
+            self.input_token_total += tokens[0]
+            self.output_token_total += tokens[1]
             if (return_response == True and return_log == True):
                 return response, log_entry
             if (return_response == True):
@@ -53,14 +58,16 @@ class Conversation:
 
 
 class Agent:
-    def __init__(self, role, expertise, engine=None,memory=None):
+    def __init__(self, role, expertise, engine=None,memory=None, kb_path=None):
         self.role = role
         self.goal = ""
         self.expertise= expertise
         self.engine = engine
         self.memory_base = memory
+        self.kb_path = kb_path
         self.additonal_context= ""
-
+    def set_memory(self, kb):
+        self.memory_base = kb
     def set_additional_context(self, additonal_context):#Used to set additional TEXT context for an agent, ie, for a lead, the info about all other agent
         self.additonal_context = additonal_context
     def set_goal(self, goal):
@@ -110,10 +117,8 @@ class Agent:
                 {relevant_knowledge}
 
                 {relevant_context}
-                
-                {self.additonal_context}
-                
 
+                {self.additonal_context}
                 Instructions: 
                 {query}
 
@@ -121,9 +126,8 @@ class Agent:
         
         if (debug_log == True):
             print("Full prompt passed to agent:", prompt)
-        output = engine.generate(prompt, format)
-        
+        output, tokens = engine.generate(prompt, format)
         #timestamp = datetime.now().time()
 
-        return output#, relevant_knowledge, timestamp
+        return output, tokens#, relevant_knowledge, timestamp
 

@@ -29,6 +29,9 @@ urlpatterns = [
     #path('api/leads/<str:name>/', views.AgentView.as_view({'get': 'retrieve'}), name='agent-detail'),
 ]
 
+print("USES3",settings.USE_S3)
 
-if settings.DEBUG:
+if not settings.USE_S3:
+
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

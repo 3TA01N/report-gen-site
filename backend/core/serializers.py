@@ -14,7 +14,7 @@ class UserLoginSerializer(serializers.Serializer):
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email')
+        fields = ('id', 'username', 'email', 'daily_input_token_count', 'daily_output_token_count')
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(write_only=True)

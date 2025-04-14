@@ -7,12 +7,8 @@ class StaticStorage(S3Boto3Storage):
     default_acl = 'public-read'
 
 
-class PublicMediaStorage(S3Boto3Storage):
+class PrivateMediaStorage(S3Boto3Storage):
     location = 'media'
-    default_acl = 'public-read'
+    default_acl = None
     file_overwrite = False
-
-class UserKBStorage(S3Boto3Storage):
-    location = 'knowledgebases'
-    default_acl = 'public-read'
-    file_overwrite = False
+    custom_domain = False

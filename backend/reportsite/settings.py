@@ -21,16 +21,15 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-
-
 #load_dotenv('.env.local')
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-print("KEY:",os.environ.get("DJANGO_SECRET_KEY"))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get("DEBUG", default=0))
@@ -52,8 +51,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'core',
-    'rest_framework_simplejwt.token_blacklist'
-
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 REST_FRAMEWORK = {
@@ -208,23 +206,36 @@ if USE_S3:
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+    AWS_REGION = os.environ.get('AWS_S3_REGION_NAME')
     AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = True
     AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
     # s3 static settings
     AWS_LOCATION = 'static'
     STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
-    STATICFILES_STORAGE = 'reportsite.storage_backends/StaticStorage'
+    STORAGES = {
+    "default": {
+            "BACKEND" : "reportsite.storage_backends.PrivateMediaStorage",
+        },
+        "staticfiles":  {
+            "BACKEND" : "reportsite.storage_backends.StaticStorage",
+        },
+    }
     # s3 public media settings
     PUBLIC_MEDIA_LOCATION = 'media'
+    #MEDIA_URL not used for public access in this case
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{PUBLIC_MEDIA_LOCATION}/'
-    DEFAULT_FILE_STORAGE = 'reportsite.storage_backends.PublicMediaStorage'
+    #redundant?Already in storages
+    DEFAULT_FILE_STORAGE = 'reportsite.storage_backends.PrivateMediaStorage'
 else:
     STATIC_URL = '/staticfiles/'
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-    MEDIA_URL = '/mediafiles/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
+    
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+#print("static storages:", STATICFILES_STORAGE)
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 
 

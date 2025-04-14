@@ -553,119 +553,125 @@ class ReportView(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         print("endpoint accessed")
         with transaction.atomic():
-            name = request.data.get('name')
-            user = request.user
-            #check daily token limit reached
-            today = now().date()
-            usage, _ = TokenUsage.objects.get_or_create(date=today)
-            if usage.tokens_used > settings.DAILY_TOKEN_LIMIT:
-                return Response({"error": "total max token count for today exceeded"}, status = status.HTTP_400_BAD_REQUEST)
-            #check token limit for user
-            if (user.daily_input_token_count > 4000 or user.daily_output_token_count > 4000):
-                return Response({"error": "user has exceeded max token count for today"}, status = status.HTTP_400_BAD_REQUEST)
-            username = request.user.username
-            #checks for duplicate names
-            if Report.objects.filter(name=name, user = user).exists():
-                return Response({"error": "report name already exists."}, status = status.HTTP_400_BAD_REQUEST)
-            
-            date = datetime.now()
-            task = request.data.get('task')
-            expectations = request.data.get('expectations')
-            model = request.data.get('model')
-            cycles = int(request.data.get('cycles'))
-            reportGuidelines = request.data.get('reportGuidelines')
-            method = int(request.data.get('method'))
-            temperature = float(request.data.get('temperature'))
-            engine = request.data.get('engine')
-            lead_name = request.data.get('lead')
-            lead_obj = TeamLead.objects.get(name=lead_name, user =user)
-            files = request.FILES.getlist('context_files')
-            selFiles = request.POST.getlist('selFiles')
-            selAgents = request.POST.getlist('selAgents')
-            draw_from_knowledge = False
-            
-
-            report = Report(
-                name = name,
-                date = date,
-                task = task,
-                expectations = expectations,
-                model = model,
-                cycles = cycles,
-                report_guidelines = reportGuidelines,
-                method = method,
-                temperature = temperature,
-                engine = engine,
-                lead = lead_obj,
-                user = user,
-                saved_to_lead = False
+            try:
+                name = request.data.get('name')
+                user = request.user
+                #check daily token limit reached
+                today = now().date()
+                usage, _ = TokenUsage.objects.get_or_create(date=today)
+                if usage.tokens_used > int(settings.DAILY_TOKEN_LIMIT):
+                    return Response({"error": "total max token count for today exceeded"}, status = status.HTTP_400_BAD_REQUEST)
+                #check token limit for user
+                if (user.daily_input_token_count > 4000 or user.daily_output_token_count > 4000):
+                    return Response({"error": "user has exceeded max token count for today"}, status = status.HTTP_400_BAD_REQUEST)
+                username = request.user.username
+                #checks for duplicate names
+                if Report.objects.filter(name=name, user = user).exists():
+                    return Response({"error": "report name already exists."}, status = status.HTTP_400_BAD_REQUEST)
                 
-            )
-            params = {"name": name, 
-                      "date": date, 
-                      "task": task, 
-                      "expectations": expectations,
-                      "model": model, 
-                      "cycles": cycles,
-                      "report_guidelines": reportGuidelines,
-                      "method": method,
-                      "temperature": temperature,
-                      "engine": engine,
-                      "lead_path": lead_obj.kb_path,
-                      "lead_name": lead_obj.name,
-                      "draw_from_knowledge": draw_from_knowledge,
-                      "user": username
-                      }
-            report.save()
-            report = Report.objects.get(name=report.name, user = user)
-            #selAgents setting
-            potential_agents = []
-            if selAgents[0] == "all":
-                all_agents = Agent.objects.filter(user=user)
-                report.potential_agents.add(*all_agents)
-                potential_agents = list(Agent.objects.filter(user=user).values())
-            else:
-                for agent_name in selAgents:
-                    agent_ref = Agent.objects.get(name=agent_name, user = user) 
-                    report.potential_agents.add(agent_ref)
-                    potential_agents.append(model_to_dict(agent_ref))
-            params["potential_agents"] = potential_agents
-            
-            papers = []
-            paper_names = []
-            for file in files:
-                print(file)
-                if ("txt" or "pdf" not in file.content_type):
-                    print("why failing?")
-                    return JsonResponse({"error": "File not a text file"}, status=400) 
-                file_type = os.path.splitext(file.name)[1]
-                file_type = file_type.lstrip(".")
-                paper = Paper(file = file, name = file.name, file_type = file_type, user = user)
-                if (Paper.objects.filter(name= file.name, user = user).exists()):
-                    print("FILE ALR EXISTS")
-                    return JsonResponse({"error": "Paper file already exists."}, status=400)
-                print("c3")
-                paper.save()
-                papers.append(paper)
-                print("c4")
+                date = datetime.now()
+                task = request.data.get('task')
+                expectations = request.data.get('expectations')
+                model = request.data.get('model')
+                cycles = int(request.data.get('cycles'))
+                reportGuidelines = request.data.get('reportGuidelines')
+                method = int(request.data.get('method'))
+                temperature = float(request.data.get('temperature'))
+                engine = request.data.get('engine')
+                lead_name = request.data.get('lead')
+                lead_obj = TeamLead.objects.get(name=lead_name, user =user)
+                files = request.FILES.getlist('context_files')
+                selFiles = request.POST.getlist('selFiles')
+                selAgents = request.POST.getlist('selAgents')
+                draw_from_knowledge = False
                 
 
-            print("Papers created")
-            
+                report = Report(
+                    name = name,
+                    date = date,
+                    task = task,
+                    expectations = expectations,
+                    model = model,
+                    cycles = cycles,
+                    report_guidelines = reportGuidelines,
+                    method = method,
+                    temperature = temperature,
+                    engine = engine,
+                    lead = lead_obj,
+                    user = user,
+                    saved_to_lead = False
+                    
+                )
+                params = {"name": name, 
+                        "date": date, 
+                        "task": task, 
+                        "expectations": expectations,
+                        "model": model, 
+                        "cycles": cycles,
+                        "report_guidelines": reportGuidelines,
+                        "method": method,
+                        "temperature": temperature,
+                        "engine": engine,
+                        "lead_path": lead_obj.kb_path,
+                        "lead_name": lead_obj.name,
+                        "draw_from_knowledge": draw_from_knowledge,
+                        "user": username
+                        }
+                report.save()
+                report = Report.objects.get(name=report.name, user = user)
+                #selAgents setting
+                potential_agents = []
+                if selAgents[0] == "all":
+                    all_agents = Agent.objects.filter(user=user)
+                    report.potential_agents.add(*all_agents)
+                    potential_agents = list(Agent.objects.filter(user=user).values())
+                else:
+                    for agent_name in selAgents:
+                        agent_ref = Agent.objects.get(name=agent_name, user = user) 
+                        report.potential_agents.add(agent_ref)
+                        potential_agents.append(model_to_dict(agent_ref))
+                params["potential_agents"] = potential_agents
+                
+                papers = []
+                paper_names = []
+                for file in files:
+                    print(file)
+                    if ("txt" or "pdf" not in file.content_type):
+                        print("why failing?")
+                        return JsonResponse({"error": "File not a text file"}, status=400) 
+                    file_type = os.path.splitext(file.name)[1]
+                    file_type = file_type.lstrip(".")
+                    paper = Paper(file = file, name = file.name, file_type = file_type, user = user)
+                    if (Paper.objects.filter(name= file.name, user = user).exists()):
+                        print("FILE ALR EXISTS")
+                        return JsonResponse({"error": "Paper file already exists."}, status=400)
+                    print("c3")
+                    paper.save()
+                    papers.append(paper)
+                    print("c4")
+                    
 
-            #connect keys of papers in selFiles to report obj
+                print("Papers created")
+                
 
-            for paper_name in selFiles:
-                paper_ref = Paper.objects.get(name=paper_name, user = user) 
-                print("Paper ref:", paper_ref)
-                report.context.add(paper_ref)
-                paper_names.append(paper_name)
-            
-            for paper in papers:
-                report.context.add(paper)
-                paper_names.append(paper.name)
+                #connect keys of papers in selFiles to report obj
 
-            params["context"] = paper_names
+                for paper_name in selFiles:
+                    paper_ref = Paper.objects.get(name=paper_name, user = user) 
+                    print("Paper ref:", paper_ref)
+                    report.context.add(paper_ref)
+                    paper_names.append(paper_name)
+                
+                for paper in papers:
+                    report.context.add(paper)
+                    paper_names.append(paper.name)
+
+                params["context"] = paper_names
+
+            except Exception as e:
+                traceback.print_exc()
+                return JsonResponse({"error": str(e)}, status=400)
+
             #Time to actually run the code to create a report!
             #Get the context papers
             try:

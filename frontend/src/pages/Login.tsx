@@ -91,9 +91,10 @@ function Login () {
                 <br/>
                 <div>
                     <button type="submit" disabled={isLoading} onClick={handleSubmit}>Login</button>
-                    <button onClick={handleNav} style={{ color: 'blue', background: 'none', border: 'none' }}>Register</button>
+                    
                 </div>
             </form>
+            <button onClick={handleNav} style={{ color: 'blue', background: 'none', border: 'none' }}>Register</button>
         </div>
     )
 }

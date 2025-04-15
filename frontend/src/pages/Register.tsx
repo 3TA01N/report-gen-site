@@ -37,11 +37,9 @@ function Register () {
         }
     }
     useEffect(() => {
-        if (location.search) {
-            // Remove query params without reloading
-            navigate(location.pathname, { replace: true });
-        }
-    }, [location, navigate]);
+        console.log("Full URL:", window.location.href);
+        console.log("Query params:", window.location.search);
+    }, []);
     
     useEffect(() => {
         setLoginData({
@@ -52,6 +50,7 @@ function Register () {
 
     const handleSubmit = async (e:any) => {
         e.preventDefault();
+        e.stopPropogation();
         if (isLoading) {
             return 
         }
@@ -110,19 +109,19 @@ function Register () {
                 </div>
             )}
             <h2>Register</h2>
-            <form onSubmit={handleSubmit} autoComplete="off">
+            <form onSubmit={handleSubmit} action="#" method="post" autoComplete="off">
                 <label>username:</label><br/>
-                <input type="text" name = "username" value={formData.username} onChange={handleChange}>
+                <input type="text" name = "username" value={formData.username} onChange={handleChange} autoComplete="off">
                 </input>
                 <br/>
                 <label>email:</label><br/>
-                <input type="text" name = "email" value={formData.email} onChange={handleChange}></input>
+                <input type="text" name = "email" value={formData.email} onChange={handleChange} autoComplete="off"></input>
                 <br/>
                 <label>password:</label><br/>
-                <input type="password" name = "password1" value={formData.password1} onChange={handleChange}></input>
+                <input type="password" name = "password1" value={formData.password1} onChange={handleChange} autoComplete="new-password"></input>
                 <br/>
                 <label>confirm password:</label><br/>
-                <input type="password" name = "password2" value={formData.password2} onChange={handleChange}></input>
+                <input type="password" name = "password2" value={formData.password2} onChange={handleChange} autoComplete="new-password"></input>
                 <br/>
                 <button type="submit" disabled={isLoading}>Register</button>
             </form>

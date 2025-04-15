@@ -24,7 +24,7 @@ function Home () {
     const [lead, setLead] = useState(initData.lead || '');
     const [selectedInDBFiles, setSelectedInDBFiles] = useState<string[]>(initData.selectedInDBFiles || [])
     const [selectedAgents, setSelectedAgents] = useState<string[]>(initData.selectedAgents || [])
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(initData.error || null);
     const [showInstr] = useState<boolean>(() => {
         return localStorage.getItem("showInstr") === "true";
       });

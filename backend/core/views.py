@@ -560,14 +560,14 @@ class ReportView(viewsets.ModelViewSet):
                 today = now().date()
                 usage, _ = TokenUsage.objects.get_or_create(date=today)
                 if usage.tokens_used > int(settings.DAILY_TOKEN_LIMIT):
-                    return Response({"error": "total max token count for today exceeded"}, status = status.HTTP_400_BAD_REQUEST)
+                    return HttpResponse("total max token count for today exceeded", status = status.HTTP_400_BAD_REQUEST)
                 #check token limit for user
                 if (user.daily_input_token_count > 4000 or user.daily_output_token_count > 4000):
-                    return Response({"error": "user has exceeded max token count for today"}, status = status.HTTP_400_BAD_REQUEST)
+                    return HttpResponse("user has exceeded max token count for today", status = status.HTTP_400_BAD_REQUEST)
                 username = request.user.username
                 #checks for duplicate names
                 if Report.objects.filter(name=name, user = user).exists():
-                    return Response({"error": "report name already exists."}, status = status.HTTP_400_BAD_REQUEST)
+                    return HttpResponse("report name already exists.", status = status.HTTP_400_BAD_REQUEST)
                 
                 date = datetime.now()
                 task = request.data.get('task')
@@ -638,13 +638,13 @@ class ReportView(viewsets.ModelViewSet):
                     print(file)
                     if ("txt" or "pdf" not in file.content_type):
                         print("why failing?")
-                        return JsonResponse({"error": "File not a text file"}, status=400) 
+                        return HttpResponse("File not a text file", status=400) 
                     file_type = os.path.splitext(file.name)[1]
                     file_type = file_type.lstrip(".")
                     paper = Paper(file = file, name = file.name, file_type = file_type, user = user)
                     if (Paper.objects.filter(name= file.name, user = user).exists()):
                         print("FILE ALR EXISTS")
-                        return JsonResponse({"error": "Paper file already exists."}, status=400)
+                        return HttpResponse("Paper file already exists.", status=400)
                     print("c3")
                     paper.save()
                     papers.append(paper)
@@ -670,7 +670,7 @@ class ReportView(viewsets.ModelViewSet):
 
             except Exception as e:
                 traceback.print_exc()
-                return JsonResponse({"error": str(e)}, status=400)
+                return HttpResponse(str(e), status=400)
 
             #Time to actually run the code to create a report!
             #Get the context papers

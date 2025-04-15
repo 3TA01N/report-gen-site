@@ -169,10 +169,55 @@ function ReportOutputPage () {
                 console.log("RETURNED RESPONSE")
                 console.log(response)
                 if (!response.ok) {
-                    throw new Error(`HTTP error: status: ${response.status}`);
+                    const err_msg = await response.text()
+                    console.error("Error generating the report:", err_msg);
+                    setError(err_msg)
+                            navigate("/", 
+                                { state: { 
+                                    name:name,
+                                    task: task,
+                                    description: description,
+                                    expectations: expectations,
+                                    model: model,
+                                    context: context,
+                                    selectedInDBFiles: selectedInDBFiles,
+                                    selectedAgents: selectedAgents,
+                                    cycles: cycles,
+                                    reportGuidelines: reportGuidelines,
+                                    method: method,
+                                    temp: temp,
+                                    engine: engine,
+                                    lead: lead,
+                                    error: err_msg
+                                } 
+                            });
+                    return
                 }
                 if (!response.body) {
+                    setError("No response body")
+                            navigate("/", 
+                                { state: { 
+                                    name:name,
+                                    task: task,
+                                    description: description,
+                                    expectations: expectations,
+                                    model: model,
+                                    context: context,
+                                    selectedInDBFiles: selectedInDBFiles,
+                                    selectedAgents: selectedAgents,
+                                    cycles: cycles,
+                                    reportGuidelines: reportGuidelines,
+                                    method: method,
+                                    temp: temp,
+                                    engine: engine,
+                                    lead: lead,
+                                    error: "No response body"
+                                } 
+                            });
+                        
                     throw new Error("No response body found.");
+                    return
+                    
                 }
 
                 const reader = response.body.getReader();
@@ -251,7 +296,30 @@ function ReportOutputPage () {
                         }
                     }
                     catch (error:any){
-                        console.error(error)
+                        console.error("Error generating the report:", error);
+                        console.log("error catching")
+                        console.error(Error)
+                        setLoadStatus(false)
+                        navigate("/", 
+                            { state: { 
+                                name:name,
+                                task: task,
+                                description: description,
+                                expectations: expectations,
+                                model: model,
+                                context: context,
+                                selectedInDBFiles: selectedInDBFiles,
+                                selectedAgents: selectedAgents,
+                                cycles: cycles,
+                                reportGuidelines: reportGuidelines,
+                                method: method,
+                                temp: temp,
+                                engine: engine,
+                                lead: lead,
+                                error: error.response.data.error
+                            } 
+                        });
+                        return
                     }
                 }
                 console.log(curGenerating)
@@ -282,6 +350,7 @@ function ReportOutputPage () {
                         error: error.response.data.error
                     } 
                 });
+                return
             }
         }
         postReport();

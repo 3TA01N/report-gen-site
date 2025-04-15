@@ -50,7 +50,6 @@ function Register () {
 
     const handleSubmit = async (e:any) => {
         e.preventDefault();
-        e.stopPropogation();
         if (isLoading) {
             return 
         }

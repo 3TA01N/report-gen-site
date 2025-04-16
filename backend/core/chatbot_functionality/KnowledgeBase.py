@@ -6,6 +6,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from .constants import embedders_dict
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import json
+from pdfminer.high_level import extract_text
 import shutil
 import faiss
 from langchain_community.vectorstores import FAISS
@@ -52,6 +53,30 @@ class s3Interface():
         self.s3_client = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
                          aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY, region_name=settings.AWS_REGION)
     
+    def read_file(self, remote_path):
+        try:
+            
+            response = self.s3_client.get_object(Bucket=self.bucket_name, Key=remote_path)
+            content_type = response.get("ContentType")
+            content=""
+            if "txt" in content_type:
+                content = response['Body'].read().decode('utf-8')
+            elif "pdf" in content_type:
+                with open('temppdf', 'wb+') as destination:
+                    destination.write(response['Body'].read())
+
+                content = extract_text('temppdf')
+                os.remove('temppdf')
+            else:
+                return "unknwon type, unexpected err"
+
+            return content
+        
+        except self.s3_client.exceptions.NoSuchKey:
+            raise FileNotFoundError(f"The file '{remote_path}' does not exist in the bucket '{self.bucket_name}'.")
+        except Exception as e:
+            raise Exception(f"Error reading file '{remote_path}': {e}")
+        
     def delete_folder(self, remote_folder):
         response = self.s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=remote_folder)
 

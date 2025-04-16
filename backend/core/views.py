@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import os
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from django.utils.timezone import now
 from django.core.files.storage import default_storage
 import traceback
@@ -239,20 +241,41 @@ class AgentView(viewsets.ModelViewSet):
                 agent.stored_papers.add(paper_ref)
                 file_content = ""
                 if (settings.USE_S3):
-                    s3_path = os.path.join("media", username, "papers", paper_name)
-                    if default_storage.exists(s3_path):
-                        with default_storage.open(s3_path, 'r') as paper_file:
-                            if paper_ref.file_type == "txt":
-                                file_content = paper_file.read()
-                            if paper_ref.file_type == "pdf":
-                                with open('temppdf', 'wb+') as destination:
-                                    for chunk in paper_file.chunks():
-                                        destination.write(chunk)
+                    try:
+                        
+                        file_obj = paper_ref.file.file
+                        print(type(file_obj))
+                        if paper_ref.file_type == "txt":
+                            file_content = file_obj.read().decode('utf-8')
+                        if paper_ref.file_type == "pdf":
+                            with open('temppdf', 'wb+') as destination:
+                                for chunk in file_obj.chunks():
+                                    destination.write(chunk)
 
-                                file_content = extract_text('temppdf')
-                                os.remove('temppdf')
-                    else:
+                            file_content = extract_text('temppdf')
+                            os.remove('temppdf')
+
+                        """
+                        parsed_paper_name = paper_name.replace(" ", "_")
+                        s3_path = os.path.join("media", username, "papers", parsed_paper_name)
+                        print(s3_path)
+                        if default_storage.exists(s3_path):
+                            with default_storage.open(s3_path, 'r') as paper_file:
+                                if paper_ref.file_type == "txt":
+                                    file_content = paper_file.read()
+                                if paper_ref.file_type == "pdf":
+                                    with open('temppdf', 'wb+') as destination:
+                                        for chunk in paper_file.chunks():
+                                            destination.write(chunk)
+
+                                    file_content = extract_text('temppdf')
+                                    os.remove('temppdf')
+                        """
+                    except Exception as e:
+                        print(e)
                         print("ERROR: file path doesnt exist in s3")
+                        print(os.path.join("media", username, "papers", paper_name.replace(" ", "_")))
+                        return JsonResponse({"error": "File doesnt exist in s3 for this user."}, status=400)
                 else:
                     file_path = paper_ref.file.path
                     #This is where you handle parsing the file text, depending on the format
@@ -459,9 +482,7 @@ class TeamLeadView(viewsets.ModelViewSet):
 
             lead.save()
             return Response({"Lead created"})
-        
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+     
 
 
 @api_view(["POST"])
@@ -636,8 +657,8 @@ class ReportView(viewsets.ModelViewSet):
                 paper_names = []
                 for file in files:
                     print(file)
-                    if ("txt" or "pdf" not in file.content_type):
-                        print("why failing?")
+                    if ("txt" not in file.content_type and "pdf" not in file.content_type):
+                        print(file.content_type)
                         return HttpResponse("File not a text file", status=400) 
                     file_type = os.path.splitext(file.name)[1]
                     file_type = file_type.lstrip(".")

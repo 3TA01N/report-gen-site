@@ -16,7 +16,7 @@ class CustomUser(AbstractUser):
 from django.utils.timezone import now
 
 class TokenUsage(models.Model):
-    date = models.DateTimeField(default=now)
+    date = models.DateField(default=now)
     tokens_used = models.IntegerField(default=0)
 
 def paper_upload(instance, filename):

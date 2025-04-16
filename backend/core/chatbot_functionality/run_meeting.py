@@ -88,11 +88,12 @@ def run_meeting(params):
             parsed_paper_name = paper_name.replace(" ", "_")
             if (settings.USE_S3):
                 s3_path = os.path.join("media", username, "papers", parsed_paper_name)
-                if default_storage.exists(s3_path):
-                    with default_storage.open(s3_path, 'r') as paper_file:
-                        paper_content = paper_file.read()
-                else:
-                    print("ERROR: file path doesnt exist in s3")
+                try:
+                    paper_content = s3.read_file(s3_path)
+                except Exception as e:
+                    print("ERROR:", e)
+                    yield {"Error:": e}
+                    return
             else:
                 paper_file = open(os.path.join(settings.MEDIA_ROOT, username, "papers", parsed_paper_name))
                 paper_content = paper_file.read()
@@ -206,6 +207,7 @@ def run_meeting(params):
             print(parsed_output)
             
             #check that worker team is valid
+            print("VALID AGENTS:")
             for i in parsed_output:
                 if i not in agents_list:
                     valid_team = False

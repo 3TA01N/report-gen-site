@@ -28,7 +28,7 @@ class Conversation:
                 f"Agent Name: {agent_name}\n"
                 f"Prompt: {query}\n"
                 f"Response: {response}\n"
-                "--------------------------------------------------"
+                "--------------------------------------------------\n"
             )
         self.chat_log.append(formatted_entry)
         return formatted_entry
@@ -40,7 +40,6 @@ class Conversation:
         #Given an agent_name, answer the response, and format response into the log
         str_log = self.chat_log_to_string()
         if (agent_name in self.team):
-            
             agent = self.team[agent_name]
             response, tokens = agent.answer_query(prompt, str_log, self.engine, query_kb = draw_from_knowledge, vectors = 3, debug_log = False, format=format)
             log_entry = self.add_to_log(agent_name, prompt, response)

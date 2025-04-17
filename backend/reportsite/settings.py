@@ -32,6 +32,7 @@ if os.getenv('RENDER') is None:
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 DAILY_TOKEN_LIMIT = os.environ.get('DAILY_TOKEN_LIMIT')
+print(DAILY_TOKEN_LIMIT)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get("DEBUG", default=0))
 CORS_ALLOWED_ORIGIN_REGEXES=os.environ.get("DJANGO_CORS_ALLOWED_ORIGIN_REGEXES").split(",")

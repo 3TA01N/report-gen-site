@@ -83,7 +83,7 @@ def run_meeting(params):
         #Get context papers user passed in as text
         #Note: because of django's annoying auto file formatter(converts spaces to _), check for that here
         paper_ref_list = params["context"]
-        papers_to_text = []
+        papers_to_text = ['The following papers were uploaded to be used as a basis for the conversation. Their contents are listed below:']
         for paper_name in paper_ref_list:
             parsed_paper_name = paper_name.replace(" ", "_")
             if (settings.USE_S3):
@@ -102,7 +102,9 @@ def run_meeting(params):
             papers_to_text.append(paper_content)
             
             
-        
+        #papers_to_text converted into readable text
+            
+        papers_to_text_full = '\n'.join(papers_to_text)
         #Create the setup team: does initial agent choosing, task assignment, guiding q generation
         setup_team = {
             "ProjectLead": lead_agent,
@@ -387,6 +389,7 @@ def run_meeting(params):
             The discussion will base around the following guiding questions: 
             {guiding_questions}
 
+            {papers_to_text_full}
             The meeting starts with the lead.
             
             END CONTEXT
@@ -398,8 +401,10 @@ def run_meeting(params):
             End your output after delivering your response.
             Lead: start the conversation by assigning tasks, asking guiding questions, etc. Further, if relevant memories are provided, draw from those as well.
             """
+            #not implemented yet
             if (draw_from_knowledge == True):
-                start_prompt += "Also draw from the following relevant memories: "
+                print("IMPLEMENT DRAWFROMKNWOLEDGE")
+                #start_prompt += "Also draw from the following relevant memories: "
             
             
             output=conversation.convo_prompt(agent_name = "ProjectLead", prompt = start_prompt, return_log=False, return_response=True, draw_from_knowledge=draw_from_knowledge)
@@ -425,7 +430,7 @@ def run_meeting(params):
                     
                     response, log = conversation.convo_prompt(agent_name=agent_key, prompt=agent_prompt, return_response = True, return_log=True,draw_from_knowledge=draw_from_knowledge)
                     yield json.dumps(["RESPONSE", agent_key, response]) + '\n'
-                    print(log)
+                    print("FULL LOG of the past agent response:",log)
                 
                 #end of one cycle
                 yield json.dumps(["CONV_PROGRESS", "critic analyzing chat log"]) + '\n'

@@ -205,6 +205,9 @@ class AgentView(viewsets.ModelViewSet):
                     return JsonResponse({"error": f"File is not pdf/text. Is of type {file_type}"}, status=400)
                 
                 print("Text to be embedded:", file_content)
+                if isinstance(file_content, bytes):
+                    print("decoding terxt?")
+                    file_content = file_content.decode("utf-8")
                 paper_name = file.name
                 file_content = [file_content]
                 agent_knowledge.upload_knowledge_1(text= file_content, source_name= paper_name, chunker = chunker)
@@ -488,25 +491,41 @@ class TeamLeadView(viewsets.ModelViewSet):
 @api_view(["POST"])
 def save_report_memory(request, name):
     if request.method == 'POST':
+        username = request.user.username
         report_inst = Report.objects.get(name=name, user = request.user)
         report_text = ""
-        with open(report_inst.output.path, 'r') as file:
-            report_text = file.read()
-            print("Report text:", report_text)
-        report_inst.saved_to_lead = True
-        report_inst.save()
         lead = report_inst.lead
-        lead_kb_path = lead.kb_path
-        lead_kb = KnowledgeBase.from_path(lead_kb_path)
-
         chunker = RecursiveCharacterTextSplitter(
             chunk_size=200,
             chunk_overlap=20,
             length_function=len,
             is_separator_regex=False,
         )
-        report_text = [report_text]
-        lead_kb.upload_knowledge_1(text= report_text, source_name= report_inst.name, chunker = chunker)
+        if (settings.USE_S3):
+            s3int = s3Interface(bucket_name = settings.AWS_STORAGE_BUCKET_NAME)
+            remote_path = f"media/{username}/output/report_{name}.txt"
+            print(remote_path)
+            report_text = s3int.read_file(remote_path)
+            lead_path = f"{username}_knowledge_bases/leads/{lead.name}"
+            s3int.open_s3(remote_folder=lead_path, destination_path='temp')
+            lead_kb = KnowledgeBase.from_path('temp')
+            report_text = [report_text]
+            lead_kb.upload_knowledge_1(text= report_text, source_name= report_inst.name, chunker = chunker)
+            s3int.close_s3(remote_folder = lead_path, local_folder='temp')
+            
+
+        else:
+            with open(report_inst.output.path, 'r') as file:
+                report_text = file.read()
+
+            print("Report text:", report_text)
+            
+            lead_kb_path = lead.kb_path
+            lead_kb = KnowledgeBase.from_path(lead_kb_path)
+            report_text = [report_text]
+            lead_kb.upload_knowledge_1(text= report_text, source_name= report_inst.name, chunker = chunker)
+        report_inst.saved_to_lead = True
+        report_inst.save()
         return JsonResponse({'message': f'report saved in lead kb'})
 
 
@@ -544,16 +563,16 @@ class ReportView(viewsets.ModelViewSet):
         serializer = self.get_serializer(report)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    
-    def destroy(self, request, *args, **kwargs):
-        with transaction.atomic():
-            user = request.user
-            report_name = kwargs.get("pk")
+    @staticmethod
+    def destroy_helper(report_name, user):
+        print(report_name)
+        print(user)
+        try:
+            report = Report.objects.get(user=user, name=report_name)
+        except Report.DoesNotExist:
+            return Response({"error": "Report not found for this user."}, status=status.HTTP_404_NOT_FOUND)
+        if settings.USE_S3:
             try:
-                report = Report.objects.get(user=user, name=report_name)
-            except Report.DoesNotExist:
-                return Response({"error": "Report not found for this user."}, status=status.HTTP_404_NOT_FOUND)
-            if settings.USE_S3:
                 output_file_field = report.output.file
                 output_file_name = output_file_field.name
                 chat_log_file_field = report.chat_log.file
@@ -562,13 +581,23 @@ class ReportView(viewsets.ModelViewSet):
                     output_file_field.delete(save=False)
                 if chat_log_file_field and chat_log_file_field.storage.exists(chat_log_file_name):
                     chat_log_file_field.delete(save=False)
-            else:
-                report_path = os.path.join(settings.MEDIA_ROOT, user.username, "output", "report_" + report.name + ".txt")
-                chat_path = os.path.join(settings.MEDIA_ROOT, user.username, "report_logs", "chatlog_" + report.name + ".txt")
-                os.remove(report_path)
-                os.remove(chat_path)
-            report.delete()
-            return Response({"message": "Report successfully deleted"}, status = status.HTTP_204_NO_CONTENT)
+            except ValueError:
+                print("no output, moving on")
+            
+        else:
+            report_path = os.path.join(settings.MEDIA_ROOT, user.username, "output", "report_" + report.name + ".txt")
+            chat_path = os.path.join(settings.MEDIA_ROOT, user.username, "report_logs", "chatlog_" + report.name + ".txt")
+            os.remove(report_path)
+            os.remove(chat_path)
+        report.delete()
+        print("report deleted")
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def destroy(self, request, *args, **kwargs):
+        with transaction.atomic():
+            user = request.user
+            report_name = kwargs.get("pk")
+            self.destroy_helper(report_name, user)
             
         
     def create(self, request, *args, **kwargs):
@@ -639,6 +668,7 @@ class ReportView(viewsets.ModelViewSet):
                         "user": username
                         }
                 report.save()
+                #past this point, report obj exists in db. destroy_helper can be called without any checks
                 report = Report.objects.get(name=report.name, user = user)
                 #selAgents setting
                 potential_agents = []
@@ -657,7 +687,7 @@ class ReportView(viewsets.ModelViewSet):
                 paper_names = []
                 for file in files:
                     print(file)
-                    if ("txt" not in file.content_type and "pdf" not in file.content_type):
+                    if ("txt" not in file.content_type and "text" not in file.content_type and "pdf" not in file.content_type):
                         print(file.content_type)
                         return HttpResponse("File not a text file", status=400) 
                     file_type = os.path.splitext(file.name)[1]
@@ -665,6 +695,7 @@ class ReportView(viewsets.ModelViewSet):
                     paper = Paper(file = file, name = file.name, file_type = file_type, user = user)
                     if (Paper.objects.filter(name= file.name, user = user).exists()):
                         print("FILE ALR EXISTS")
+                        self.destroy_helper(report_name= name, user= user)
                         return HttpResponse("Paper file already exists.", status=400)
                     print("c3")
                     paper.save()
@@ -690,6 +721,7 @@ class ReportView(viewsets.ModelViewSet):
                 params["context"] = paper_names
 
             except Exception as e:
+                self.destroy_helper(report_name= name, user= user)
                 traceback.print_exc()
                 return HttpResponse(str(e), status=400)
 
@@ -730,6 +762,7 @@ class ReportView(viewsets.ModelViewSet):
                         
                         yield json.dumps("END") + '\n'
                     except Exception as e:
+                        self.destroy_helper(report_name= name, user= user)
                         traceback.print_exc()
                         error_response = {
                             "status": "error",
@@ -747,7 +780,7 @@ class ReportView(viewsets.ModelViewSet):
 
 
             except Exception as e:
-                report.delete()
+                self.destroy_helper(report_name= name, user= user)
                 return JsonResponse({"error": e}, status=400) 
 
 

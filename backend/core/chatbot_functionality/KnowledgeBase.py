@@ -59,7 +59,7 @@ class s3Interface():
             response = self.s3_client.get_object(Bucket=self.bucket_name, Key=remote_path)
             content_type = response.get("ContentType")
             content=""
-            if "txt" in content_type:
+            if "txt" in content_type or "text" in content_type:
                 content = response['Body'].read().decode('utf-8')
             elif "pdf" in content_type:
                 with open('temppdf', 'wb+') as destination:
@@ -68,7 +68,7 @@ class s3Interface():
                 content = extract_text('temppdf')
                 os.remove('temppdf')
             else:
-                return "unknwon type, unexpected err"
+                return "on type, unexpected err"
 
             return content
         
@@ -260,17 +260,6 @@ class KnowledgeBase():
             print("TEXT CHUNKED")
             
             for i in chunks:
-                
-                summarize_query = f"""You are a specialized biologist researcher focusing on pharmaceutical research. 
-                Given the following chunk of text from a research paper(given at the end of this query), identify and summarize the key findings that are relevant to 
-                understanding [specific task or query, e.g., the relationship between gene X and drug resistance 
-                in cancer].Entities: Identify the following, as well as any other information you find relevant. 
-                1.main entities (e.g., genes, proteins, drugs, diseases) mentioned in the text. 
-                2. Relationships: Describe the relationships between these entities, focusing on how they interact 
-                or influence each other in the context of [specific domain or task]. 
-                3. Key Findings: Summarize the most important findings, particularly those that could impact your research.
-                Research paper chunk: {i}"""
-                
                 
                 raw_info = str(i)
                 #print("Chunking", raw_info)

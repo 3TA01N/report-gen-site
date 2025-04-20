@@ -33,8 +33,7 @@ async function refreshToken() {
 
 // Axios interceptor
 api.interceptors.request.use(async (config) => {
-  console.log("Using API to make a request");
-
+  
   let token = localStorage.getItem('accessToken');
   const tokenExpiration = localStorage.getItem('tokenExpiration');
 

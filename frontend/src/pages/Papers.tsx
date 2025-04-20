@@ -2,6 +2,7 @@ import PaperForm from '../components/PaperForm';
 import React, { useState, useEffect } from 'react';
 import axios from "axios";
 import api from '../components/api'
+import Loader from "../components/Loader"
 
 
 function Papers () {
@@ -10,6 +11,7 @@ function Papers () {
     const [error, setError] = useState<string | null>(null);
     const [reload, setReload] = useState<number>(0)
     const accessToken = localStorage.getItem("accessToken");
+    const [isLoading, setLoadStatus] = useState<boolean>(false)
     const deleteClicked = async(id:any) => {
         try {
             api.delete(`/papers/${id}/`)
@@ -21,6 +23,7 @@ function Papers () {
     }
     
     useEffect(() => {
+        console.log("reload")
         const getPapers = async() => {
             try {
                 const response = await api.get('/papers/')
@@ -32,7 +35,7 @@ function Papers () {
             }
         }
         getPapers();
-    })
+    },[isLoading,reload])
 
     //onFileChange:
     const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,7 +58,7 @@ function Papers () {
             
         //console.log([...formData.entries()])
         setError(null);
-
+        setLoadStatus(true)
         axios({
             url: `${import.meta.env.VITE_BACKEND_URL}/api/papers/`,
             method: "POST",
@@ -66,10 +69,12 @@ function Papers () {
         })
         .then(response => {
             console.log('New paper created:', response.data)
+            setLoadStatus(false)
             //set papers
             
         })
         .catch((Error) => {
+            setLoadStatus(false)
             if (Error.response.data.error == "paper name already exists.") {
                 setError("paper name already exists. Choose a different one.")
                 console.error('Error creating new paper');
@@ -80,7 +85,7 @@ function Papers () {
             }
 
         })
-
+        
         setError(null)
         setSelectedFile(null)
     }
@@ -105,6 +110,7 @@ function Papers () {
         onFileChange={onFileChange}
         onSubmit={formSubmit}
         />
+        {isLoading && <Loader />}
 
         <h3>Current papers</h3>
         <div className="list-group">

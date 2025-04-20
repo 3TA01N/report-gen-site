@@ -9,8 +9,8 @@ function LeadPage() {
     const navigate = useNavigate();
     const deleteClicked = async () => {
         try {
-            api.delete(`/leads/${name}/`)
-            navigate('/leads')
+            await api.delete(`/leads/${name}/`)
+            navigate('/leads', { state: { runEffect: true}});
         }
         catch (error: any) {
             console.log("error deleting lead")
@@ -36,7 +36,7 @@ function LeadPage() {
         }
         getLead()
         
-    })
+    }, [])
     return (
         <div className="container my-4">
             <h3>{name}</h3>

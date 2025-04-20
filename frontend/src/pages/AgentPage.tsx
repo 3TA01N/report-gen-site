@@ -22,7 +22,7 @@ function AgentPage() {
             }
         }
         getAgents()
-    })
+    }, [])
 
     const navigate = useNavigate();
     const deleteClicked = async () => {

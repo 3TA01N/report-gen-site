@@ -23,6 +23,7 @@ const MultiselectPapers: React.FC<MultiSelectAgentsProps> =({passNamesToParent})
     useEffect(() => {
         const getAgents = async() => {
             try {
+                console.log("getting agents")
                 const response = await api.get('/agents/')
                 const options = response.data.map((cur_agent : any) => ({
                     value: cur_agent.name,

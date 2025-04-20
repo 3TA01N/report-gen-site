@@ -3,17 +3,7 @@ import MultiselectPapers from './MultiselectPapers';
 import MultiselectAgents from './MultiselectAgents';
 import api from '../components/api'
 interface ReportFormProps {
-    /*name = models.CharField(max_length = 50)
-    date = models.DateTimeField()
-    task= models.CharField(max_length = 1000)
-    expectations=models.CharField(max_length = 1000)
-    context=models.ManyToManyField(Paper, related_name='reports')
-    cycles=models.IntegerField()
-    report_guidelines=models.CharField(max_length = 1000)
-    method=models.IntegerField(),
-    temperature=models.FloatField(),
-    engine = models.CharField(max_length = 50),
-    lead = models.ForeignKey(TeamLead, on_delete=models.SET_NULL, null=True,related_name='reports')  */
+    
     name: string;//char field
     task: string;//char field
     expectations: string;// char field
@@ -57,7 +47,7 @@ function ReportForm({name, task, onSelectFileChange, onSelectAgentChange, expect
         }
         getLeads()
         
-    })
+    },[])
     
     
     return (
@@ -141,14 +131,14 @@ function ReportForm({name, task, onSelectFileChange, onSelectAgentChange, expect
 
 
         <div className="mb-3">
-            <label htmlFor="reportGuidelines" className="form-label">Number of cycles (leave blank for 1)</label>
+            <label htmlFor="reportGuidelines" className="form-label">Number of cycles (leave blank for 1, max is 4)</label>
             <input 
             type="number" 
             className="form-control" 
             id="cycles"
             value={cycles}
             onChange={onCyclesChange}
-            
+            max={4}
             />
         </div>
 

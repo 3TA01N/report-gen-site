@@ -43,7 +43,8 @@ function Agents () {
             }
         }
         getAgents()
-    })
+        //uses isLoading in the dep array as it is set when submit clicked
+    }, [isLoading])
     //handles change in the multiselect for papers in db
     const onSelectFileChange = (names: string[]) => {
         setSelectedInDBFiles(names)

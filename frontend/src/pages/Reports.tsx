@@ -16,7 +16,7 @@ function Reports () {
             }
         }
         getReports();
-    })
+    }, [])
 
     
     return (

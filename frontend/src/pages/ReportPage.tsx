@@ -65,7 +65,7 @@ function ReportPage() {
         getReport()
         
         
-    })
+    }, [])
 
     const navigate = useNavigate();
     

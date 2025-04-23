@@ -36,9 +36,11 @@ DAILY_TOKEN_LIMIT = int(os.environ.get('DAILY_TOKEN_LIMIT'))
 DEBUG = bool(os.environ.get("DEBUG", default=0))
 if (os.getenv('RENDER') is not None or os.getenv("FLY_APP_NAME") is None):
     CORS_ALLOWED_ORIGIN_REGEXES=os.environ.get("DJANGO_CORS_ALLOWED_ORIGIN_REGEXES").split(",")
+    print("REGEX:", CORS_ALLOWED_ORIGIN_REGEXES)
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 CORS_ALLOWED_ORIGINS = os.environ.get("DJANGO_CORS_ALLOWED_ORIGINS", "'http://localhost:5173'").split(",")
+print("CORS:", CORS_ALLOWED_ORIGINS)
 CSRF_TRUSTED_ORIGINS = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "http://127.0.0.1").split(",")
 
 # Application definition

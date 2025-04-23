@@ -21,7 +21,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-if os.getenv('RENDER') is None:
+if os.getenv("FLY_APP_NAME") is None:
     load_dotenv('.env.local')
 
 
@@ -31,11 +31,12 @@ if os.getenv('RENDER') is None:
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-DAILY_TOKEN_LIMIT = os.environ.get('DAILY_TOKEN_LIMIT')
-print(DAILY_TOKEN_LIMIT)
+DAILY_TOKEN_LIMIT = int(os.environ.get('DAILY_TOKEN_LIMIT'))
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get("DEBUG", default=0))
-CORS_ALLOWED_ORIGIN_REGEXES=os.environ.get("DJANGO_CORS_ALLOWED_ORIGIN_REGEXES").split(",")
+if (os.getenv('RENDER') is not None or os.getenv("FLY_APP_NAME") is None):
+    CORS_ALLOWED_ORIGIN_REGEXES=os.environ.get("DJANGO_CORS_ALLOWED_ORIGIN_REGEXES").split(",")
+
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 CORS_ALLOWED_ORIGINS = os.environ.get("DJANGO_CORS_ALLOWED_ORIGINS", "'http://localhost:5173'").split(",")
 CSRF_TRUSTED_ORIGINS = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "http://127.0.0.1").split(",")
@@ -206,9 +207,13 @@ USE_S3 = os.environ.get('USE_S3') == 'True'
 if USE_S3:
     # aws settings
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    print(AWS_ACCESS_KEY_ID)
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    print(AWS_SECRET_ACCESS_KEY)
     AWS_STORAGE_BUCKET_NAME = "reportsite-djangobucket"
+
     AWS_REGION = os.environ.get('AWS_S3_REGION_NAME')
+    print(AWS_REGION)
     AWS_QUERYSTRING_AUTH = True
     AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}

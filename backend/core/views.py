@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import os
+import psutil
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from django.utils.timezone import now
@@ -34,7 +36,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import GenericAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from memory_profiler import profile
+
 # Create your views here.
+
+
+def log_memory_usage(label):
+    process = psutil.Process(os.getpid())
+    mem = process.memory_info().rss / 1024 / 1024  # in MB
+    print(f"Memory usage from {label}: {mem:.2f} MB")
+
 class UserInfoAPIView(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = CustomUserSerializer
@@ -43,21 +54,29 @@ class UserInfoAPIView(RetrieveAPIView):
         return self.request.user
 class UserLogoutAPIView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
-
+    @profile
     def post(self, request, *args, **kwargs):
+        log_memory_usage("Before logout logic")
         try:
             refresh_token = request.data["refresh"]
             token = RefreshToken(refresh_token)
             token.blacklist()
+            log_memory_usage("Before logout resp")
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
+            log_memory_usage("Before logout resp")
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+
 
 class UserLoginAPIView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = UserLoginSerializer
-
+    @profile
     def post(self, request, *args, **kwargs):
+        log_memory_usage("Before login logic")
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user =serializer.validated_data
@@ -66,13 +85,15 @@ class UserLoginAPIView(GenericAPIView):
         data = serializer.data
         data["tokens"] = {"refresh": str(token),
                           "access": str(token.access_token)}
+        log_memory_usage("Before login resp")
         return Response(data, status = status.HTTP_200_OK)
 
 class userRegistrationAPIView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = UserRegistrationSerializer
-
+    @profile
     def post(self, request, *args, **kwargs):
+        log_memory_usage("Before regis logic")
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -81,10 +102,12 @@ class userRegistrationAPIView(GenericAPIView):
         data["tokens"] = {"refresh":str(token),
                           "access": str(token.access_token)
                           }
+        log_memory_usage("Before regis resp")
         return Response(data, status=status.HTTP_201_CREATED)
 class AgentView(viewsets.ModelViewSet):
     serializer_class = AgentSerializer
     permission_classes = [IsAuthenticated]
+    @profile
     def get_queryset(self):
         user = self.request.user
         return Agent.objects.filter(user=user)
@@ -93,7 +116,9 @@ class AgentView(viewsets.ModelViewSet):
     
     
     #overrides retrieve s.t it only retrieves if name and user matches
+    @profile
     def list(self, request, *args, **kwargs):
+        log_memory_usage("Before list agent logic")
         """Retrieve all agents for the authenticated user, or filter by name."""
         user = request.user
         lead_name = request.query_params.get("name", None)
@@ -103,9 +128,11 @@ class AgentView(viewsets.ModelViewSet):
             queryset = queryset.filter(name=lead_name)
 
         serializer = self.get_serializer(queryset, many=True)
+        log_memory_usage("Before list agent resp")
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+    @profile
     def retrieve(self, request, *args, **kwargs):
+        log_memory_usage("Before retrieve agent logic")
         """Retrieve a specific lead for the authenticated user."""
         user = request.user
         agent_name = kwargs.get("pk")
@@ -116,11 +143,13 @@ class AgentView(viewsets.ModelViewSet):
             return Response({"error": "Agent not found for this user."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = self.get_serializer(lead)
+        log_memory_usage("Before retrieve agent resp")
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-
+    @profile
     def destroy(self, request, *args, **kwargs):
         with transaction.atomic():
+            log_memory_usage("Before destroy agent logic")
             user = request.user
             agent_name = kwargs.get('pk')
             
@@ -139,8 +168,9 @@ class AgentView(viewsets.ModelViewSet):
                 print("Destroy path:", path)
                 shutil.rmtree(path)
             agent.delete()
+            log_memory_usage("Before detele agent response")
             return Response({"message": "Agent successfully deleted"}, status = status.HTTP_204_NO_CONTENT)
-
+    @profile
     def create(self, request, *args, **kwargs):
         with transaction.atomic():
             #create all papers objects
@@ -311,6 +341,7 @@ class PaperView(viewsets.ModelViewSet):
     parser_class = (MultiPartParser)
     serializer_class = PaperSerializer
     permission_classes = [IsAuthenticated]
+    @profile
     def get_queryset(self):
         user = self.request.user
         return Paper.objects.filter(user=user)
@@ -319,6 +350,7 @@ class PaperView(viewsets.ModelViewSet):
     
     
     #get for multiple: ie, all papers
+    @profile
     def list(self, request, *args, **kwargs):
         """Retrieve all papers for the authenticated user, or filter by name."""
         user = request.user
@@ -331,13 +363,13 @@ class PaperView(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         data = serializer.data
 
-        for item, paper in zip(data, queryset):
+        """for item, paper in zip(data, queryset):
             if paper.file:
                 item["signed_url"] = get_signed_url(paper.file.name)
-
+        """
         return Response(data, status=status.HTTP_200_OK)
     
-
+    @profile
     def create(self, request, *args, **kwargs):
         with transaction.atomic():
             user = request.user
@@ -360,6 +392,7 @@ class PaperView(viewsets.ModelViewSet):
             return Response("Paper created")
         
     #for getting one paper: ie, individual paper page
+    @profile
     def retrieve(self, request, *args, **kwargs):
         """Retrieve a specific paper for the authenticated user."""
         user = request.user
@@ -371,16 +404,16 @@ class PaperView(viewsets.ModelViewSet):
             return Response({"error": "paper not found for this user."}, status=status.HTTP_404_NOT_FOUND)
 
 
-        signed_url = None
+        """signed_url = None
         if paper.file:
             storage = PrivateMediaStorage()
             signed_url = storage.url(paper.file.name)
- 
+        """
         serializer = self.get_serializer(paper)
         data = serializer.data
-        data["signed_url"] = signed_url
+        #data["signed_url"] = signed_url
         return Response(data, status=status.HTTP_200_OK)
-    
+    @profile
     def destroy(self, request, *args, **kwargs):
         with transaction.atomic():
             user = request.user
@@ -408,10 +441,11 @@ class PaperView(viewsets.ModelViewSet):
 class TeamLeadView(viewsets.ModelViewSet):
     serializer_class = TeamLeadSerializer
     permission_classes = [IsAuthenticated]
+    @profile
     def get_queryset(self):
         user = self.request.user
         return TeamLead.objects.filter(user=user)
-    
+    @profile
     def list(self, request, *args, **kwargs):
         """Retrieve all papers for the authenticated user, or filter by name."""
         user = request.user
@@ -423,7 +457,7 @@ class TeamLeadView(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+    @profile
     def retrieve(self, request, *args, **kwargs):
         """Retrieve a specific lead for the authenticated user."""
         user = request.user
@@ -436,7 +470,7 @@ class TeamLeadView(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(lead)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+    @profile
     def destroy(self, request, *args, **kwargs):
         with transaction.atomic():
             user = request.user
@@ -456,7 +490,7 @@ class TeamLeadView(viewsets.ModelViewSet):
             lead.delete()
             return Response({"message": "lead successfully deleted"}, status = status.HTTP_204_NO_CONTENT)
         
-        
+    @profile
     def create(self, request, *args, **kwargs):
         with transaction.atomic():
             name = request.data.get('name')
@@ -537,7 +571,7 @@ class ReportView(viewsets.ModelViewSet):
         return Report.objects.filter(user=user)
     
     
-    
+    @profile
     def list(self, request, *args, **kwargs):
         """Retrieve all reports for the authenticated user, or filter by name."""
         user = request.user
@@ -549,7 +583,7 @@ class ReportView(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+    @profile
     def retrieve(self, request, *args, **kwargs):
         """Retrieve a specific report for the authenticated user."""
         user = request.user
@@ -592,14 +626,14 @@ class ReportView(viewsets.ModelViewSet):
         report.delete()
         print("report deleted")
         return Response(status=status.HTTP_204_NO_CONTENT)
-
+    @profile
     def destroy(self, request, *args, **kwargs):
         with transaction.atomic():
             user = request.user
             report_name = kwargs.get("pk")
             self.destroy_helper(report_name, user)
             
-        
+    @profile
     def create(self, request, *args, **kwargs):
         print("endpoint accessed")
         with transaction.atomic():

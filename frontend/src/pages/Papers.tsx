@@ -119,7 +119,7 @@ function Papers () {
             <div className="d-flex bd-highlight">
                 <div className = "p-2 flex-fill bd-highlight">
                     <a 
-                    href= {paper.signed_url}
+                    href= {paper.file}
                     className="list-group-item list-group-item-action"
                     target="_blank"
                     >

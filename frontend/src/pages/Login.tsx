@@ -45,6 +45,7 @@ function Login () {
           try{
                 console.log(formData)
                 const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/login/`, formData)
+                console.log(`${import.meta.env.VITE_BACKEND_URL}/api/login/`)
                 console.log("Success!", response.data)
                 localStorage.setItem("accessToken", response.data.tokens.access);
                 localStorage.setItem("refreshToken", response.data.tokens.refresh)

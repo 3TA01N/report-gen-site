@@ -52,7 +52,9 @@ function Home () {
           setContext(uploaded);
         }
     }
-
+    const handleRemoveFile = (index: number) => {
+        setSelectedInDBFiles(prev => prev.filter((_, i) => i !== index));
+      };
       
     const formSubmit = (event: React.FormEvent) => {
         event.preventDefault()
@@ -99,6 +101,7 @@ function Home () {
 
             <h3>Generate a new report</h3>
             <ReportForm
+                onRemoveFile={handleRemoveFile}
                 name = {name}
                 onSelectFileChange={onSelectFileChange}
                 onSelectAgentChange={onSelectAgentChange}

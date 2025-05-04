@@ -6,16 +6,21 @@ from .KnowledgeBase import s3Interface
 import shutil
 import traceback
 from django.conf import settings
-from .Agent import Conversation, Agent
-#from .AgentsTemplates import ProjectLead, Analyst, agents_map, agents_list, setup_team
+from .Conversation import Conversation
+from .Agent import Agent
 from .KnowledgeBase import KnowledgeBase
-from langchain_community.embeddings import HuggingFaceEmbeddings
 import re
 import requests
 from .constants import engines_dict, embedders_dict, lead_role, lead_expertise, lead_goal,analyst_agent
 
 import os
 import sys
+
+#Agent/Conversation/Lead/Engine abstraction:
+#Agent: consists of its role, goal ,expertise(all prompting stuff) + A knowledge base.
+#Conversation: consists of lsit of agents, and engine. On call to chat, it gets the agent info,
+#and uses the engine to generate openai chatcompletion
+#Engine: just a wrapper for chat gpt openai chatcompletion
 class ChosenAgent(BaseModel):
     agent_name: str
     reasoning: str
@@ -60,12 +65,13 @@ def run_meeting(params):
     #chat logs from previous conversations generated with the same lead
     lead_path = params["lead_path"]
     lead_name = params["lead_name"]
-    s3 = s3Interface(bucket_name = settings.AWS_STORAGE_BUCKET_NAME)
+    
     #wrap in try so that if anything goes wrong AND s3 is being used, the temp folder generated for the
     #knowledge bases are all deleted to avoid clutterin
     try:
         
         if (settings.USE_S3):
+            s3 = s3Interface(bucket_name = settings.AWS_STORAGE_BUCKET_NAME)
             print("saving s3 into ",f'{username}_knowledge_bases/leads/{lead_name}')
             s3.open_s3(f'{username}_knowledge_bases/leads/{lead_name}', lead_path)
             #saves the kb into lead_path
@@ -73,7 +79,7 @@ def run_meeting(params):
 
         #Generate a lead agent. This lead agent will be the team's liason to the knowledge base 
         #of previous chat log data
-        lead_agent = Agent(lead_role, lead_expertise, memory= TeamKnowledgeBase)
+        lead_agent = Agent(role=lead_role, expertise=lead_expertise, memory= TeamKnowledgeBase)
         lead_agent.set_goal(lead_goal)
 
         #total output/input tokens used
@@ -114,7 +120,9 @@ def run_meeting(params):
         f_engine_name = f"{engine_name}_{model_name}"
         #Set up the conversation for choosing agents
         engine = engines_dict[f_engine_name]()
-        setup_conversation = Conversation(setup_team, engine)
+        
+        #setup_start_prompt = "You have been given this task by your director: {task}. You are now in charge of setting up a discussion centered around this task."
+        #setup_conversation = Conversation(setup_team, setup_start_prompt, engine)
         agents_map = {}
 
         yield json.dumps(["PROGRESS", "SETUP"]) + "\n"
@@ -134,7 +142,8 @@ def run_meeting(params):
         #Generate team's context: consists of objectives, guiding questions, and rules
         agents_info = "\n\n".join(f"{name}: \n{agent.to_string()}" for name, agent in agents_map.items())
         
-        choose_agents_prompt = f"""You have been given this task by your director: {task}. 
+        choose_agents_prompt = f"""
+        You have been given this task by your director: {task}
         Given the following information on possible agents to choose from: 
 
         {agents_info}
@@ -187,15 +196,20 @@ def run_meeting(params):
             print("unknown engine:", engine_name)
 
 
-        print("deciding agents")
+        #print("deciding agents")
         #Have project lead generate a team until a valid team is reached. If after 3 iterations
         valid_team = False
         yield json.dumps(["PROGRESS", "CHOOSETEAM"]) + "\n"
+        #keep track of these separately: because openaichatcompletion cant use format, must directly
+        #call from engine, so we keep track of these outside the conversation class
+
         while valid_team == False:
             valid_team = True
-            setup_conversation.reset_chat()
-            #reinstantiate setup_conversation to ensure: convo isn't diluted by multiple attempts
-            output, log_entry = setup_conversation.convo_prompt("ProjectLead", choose_agents_prompt, draw_from_knowledge = False, return_log=True, return_response=True, format= choose_agents_format)
+            completion = engine.generate(choose_agents_prompt, format= choose_agents_format)
+            output = completion['output']
+            tokens = completion['tokens']
+            input_tokens += tokens[0]
+            output_tokens += tokens[1]
             print("___________________________\nDECIDED AGENTS\n___________________________")
             #Parse response into list of agents that were chosen by the lead
             if (engine_name == "ollama"):
@@ -231,13 +245,15 @@ def run_meeting(params):
         #Combine setup team and worker team
         team = worker_team | setup_team
         time.sleep(0.5)
+        setup_start_prompt = "You are an administrative team given a task by your director: {task}."
+        setup_conversation = Conversation(team=setup_team, start_prompt=setup_start_prompt, engine=engine)
         for agent_name, agent in worker_team.items():
             #Set engine and goals.
-            agent.set_engine(engine)
+            #agent.set_engine(engine)
             yield json.dumps(["PROGRESS", "GENGOAL", agent_name]) + '\n'
-            agent_goal = setup_conversation.convo_prompt("ProjectLead", 
+            agent_goal = setup_conversation.convo_prompt(agent_name="ProjectLead", 
                                                             prompt=f"For the agent {agent_name}, come up with a goal for it within the context of the task. Limit this goal to two sentences maximum.",
-                                                            draw_from_knowledge=False, return_response=True
+                                                            draw_from_knowledge=False, 
                                                             )
             yield json.dumps(["GOAL", agent_name, agent_goal]) + '\n'
             time.sleep(0.1)
@@ -245,20 +261,17 @@ def run_meeting(params):
         
         #Giving lead agent knowledge of all other agents:
         team_info = "\n\n".join(f"{name}: \n{agent.to_string()}" for name, agent in worker_team.items())
-        lead_agent.set_additional_context(f"Team info: \n{team_info}")
-
 
         yield json.dumps(["PROGRESS", "GUIDINGQ"]) + "\n"
         #generate guiding questions
         guiding_questions_prompt = f"Generate at most 4 general guiding questions based on the task. These questions should guide team members."
-        guiding_questions = setup_conversation.convo_prompt("ProjectLead", prompt=guiding_questions_prompt,return_response=True, draw_from_knowledge=False)
+        guiding_questions = setup_conversation.convo_prompt(agent_name="ProjectLead", prompt=guiding_questions_prompt,draw_from_knowledge=False)
         yield json.dumps(["GUIDINGQ", guiding_questions]) + '\n'
         
         #get the total tokens used in setup_conversation
         input_tokens += setup_conversation.input_token_total
         output_tokens += setup_conversation.output_token_total
-        #init report generation convo object
-        conversation = Conversation(team, engine)
+        
 
         #Guiding prompt contains info all agents share about project objectives
         #method 2: conversation.
@@ -382,7 +395,10 @@ def run_meeting(params):
         if (method == 2):     
             time.sleep(0.1)
             yield json.dumps(["PROGRESS", "STARTCONVO"]) + '\n'
-            time.sleep(0.25)
+            time.sleep(0.1)
+
+            #init report generation convo object
+            
             start_prompt = f"""
             This is the context for a team meeting to discuss the following task:
             {task}
@@ -390,27 +406,24 @@ def run_meeting(params):
             {guiding_questions}
 
             {papers_to_text_full}
-            The meeting starts with the lead.
             
-            END CONTEXT
-            
-            Instructions:
-
-            Generate only your response as the lead agent.
-            Do not simulate or continue the conversation from the perspective of other agents.
-            End your output after delivering your response.
-            Lead: start the conversation by assigning tasks, asking guiding questions, etc. Further, if relevant memories are provided, draw from those as well.
+            The team consists of the following members: {team_info}
             """
+
+            conversation = Conversation(team=team, start_prompt = start_prompt, engine=engine)
+
             #not implemented yet
             if (draw_from_knowledge == True):
                 print("IMPLEMENT DRAWFROMKNWOLEDGE")
                 #start_prompt += "Also draw from the following relevant memories: "
             
             
-            output=conversation.convo_prompt(agent_name = "ProjectLead", prompt = start_prompt, return_log=False, return_response=True, draw_from_knowledge=draw_from_knowledge)
-            yield json.dumps(["RESPONSE", "lead", output]) + '\n'
+            output=conversation.convo_prompt(agent_name = "ProjectLead", prompt = start_prompt, draw_from_knowledge=draw_from_knowledge)
             time.sleep(0.1)
+            yield json.dumps(["RESPONSE", "lead", output]) + '\n'
+            
             for i in range(cycles):
+                time.sleep(0.1)
                 yield json.dumps(["CYCLE", i]) + '\n'
                 #For each cycle: for each agent, provides it's thoughts given it's expertise.
                 for agent_key in worker_team:
@@ -423,36 +436,41 @@ def run_meeting(params):
                         critique = ""
 
                     #Include expertise, and stuff
-                    agent_prompt =  f"""{agent_key}, please provide your thoughts on the discussion given your relevant expertise. 
+                    agent_prompt =  f"""{agent_key}, continue the conversation. 
                         Remember that you can and should (politely) disagree with other team members if you have a different perspective.
                         Alternatively, if you do not have anything new or relevant to add, you may say "pass".
                         {critique}"""
                     
-                    response, log = conversation.convo_prompt(agent_name=agent_key, prompt=agent_prompt, return_response = True, return_log=True,draw_from_knowledge=draw_from_knowledge)
+                    response = conversation.convo_prompt(agent_name=agent_key, prompt=agent_prompt, draw_from_knowledge=True)
+                    time.sleep(0.1)
                     yield json.dumps(["RESPONSE", agent_key, response]) + '\n'
-                    print("FULL LOG of the past agent response:",log)
                 
                 #end of one cycle
+                time.sleep(0.1)
                 yield json.dumps(["CONV_PROGRESS", "critic analyzing chat log"]) + '\n'
-                critic_prompt = f"""Critic: Read through the chat log, and suggest improvements that directly address the agenda and any agenda questions. 
+                critic_prompt = f"""Critic: Read through the responses generated in this cycle, and suggest improvements that directly address the agenda and any agenda questions. 
             Prioritize simple solutions over unnecessarily complex ones, but demand more detail where detail is lacking. 
             Additionally, validate whether the answer strictly adheres to the agenda and any agenda questions and provide corrective feedback if it does not. 
             Only provide feedback; do not implement the answer yourself.
             Your critique should be formatted clearly, with each agent addressed individually by name.
             """
-                critic_response = conversation.convo_prompt(agent_name="Analyst", prompt=critic_prompt, return_log=False, return_response=True, draw_from_knowledge=False)
+                time.sleep(0.1)
+                critic_response = conversation.convo_prompt(agent_name="Analyst", prompt=critic_prompt, draw_from_knowledge=False)
+                time.sleep(0.1)
                 yield json.dumps(["RESPONSE", "critic", critic_response]) + '\n'
                 post_round_lead_prompt = f"""This concludes round {i+1} of {cycles} rounds of discussion. Lead, synthesize the points raised by each team member, make decisions regarding the agenda based on team member input, and ask follow-up questions to gather more information and feedback about how to better address the agenda"""
+                time.sleep(0.1)
                 yield json.dumps(["CONV_PROGRESS", "lead synthesizing points"]) + '\n'
-                lead_response = conversation.convo_prompt(agent_name="ProjectLead",prompt=post_round_lead_prompt, return_log=False, return_response=True, draw_from_knowledge=False)
+                lead_response = conversation.convo_prompt(agent_name="ProjectLead",prompt=post_round_lead_prompt, draw_from_knowledge=False)
+                time.sleep(0.1)
                 yield json.dumps(["RESPONSE", "lead", lead_response]) + '\n'
 
             time.sleep(0.1)
             yield json.dumps(["CONV_PROGRESS", "conversation over, generating report"]) + '\n'
-            concluding_prompt = f"Lead: given the conersation that has taken place, summarize your findings into a report that follows the guidelines:"
+            concluding_prompt = f"Lead: given the conersation that has taken place, summarize your findings into a report that follows the guidelines:{report_guidelines}"
             f"{report_guidelines}"
             f"Ensure the report clearly delivers on the main task. As a reminder, the task was {task}. Further, ensure the report must follow any specifics described in the expectations: {expectations}"
-            final_report = conversation.convo_prompt(agent_name="ProjectLead",prompt=concluding_prompt,return_response=True,return_log=False, debug_log=True, draw_from_knowledge=draw_from_knowledge)
+            final_report = conversation.convo_prompt(agent_name="ProjectLead",prompt=concluding_prompt, draw_from_knowledge=draw_from_knowledge)
             #os.system('cls' if os.name == 'nt' else 'clear')
             
 
@@ -462,13 +480,20 @@ def run_meeting(params):
             #At the end of each cycle, critical analyst delivers it's opinion for use in the next cycle
         #Method 2: Agents have a conversation with each other(no assigned tasks to each one)
         #Method 3: Combined, agents each generate their own outputs, but the converse with their outputs are part of their context at the end.
+        
+        
+        chat_log = ''
 
-        chat_log = ''.join(conversation.chat_log)
+        for entry in conversation.chat_log:
+            role = entry['role']
+            content = entry['content']
+            chat_log += f"{role}: {content}\n"
         input_tokens += conversation.input_token_total
         output_tokens += conversation.output_token_total
         if (settings.USE_S3):
             clear_local_s3(username)
-
+        print("Done with run_meeting functionality")
+        print("yielding: ", {"final_report": final_report, "worker_team": parsed_output, "chat_log": chat_log, "input_tokens": input_tokens, "output_tokens": output_tokens})
         yield {"final_report": final_report, "worker_team": parsed_output, "chat_log": chat_log, "input_tokens": input_tokens, "output_tokens": output_tokens}
 
         #Post processing: convert final report into a file, save new info(agents used, report)

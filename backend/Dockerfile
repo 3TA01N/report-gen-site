@@ -16,6 +16,7 @@ WORKDIR /app
 
 COPY requirements.txt .
 
+
 RUN pip install --upgrade pip setuptools wheel --no-cache-dir
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
@@ -24,6 +25,10 @@ FROM python:3.11-slim AS final
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y cron \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 
 # Create app user and app directory
 RUN useradd -m -r appuser && mkdir /app && chown -R appuser /app
@@ -35,8 +40,13 @@ COPY --from=builder /install /usr/local
 
 # Copy your app code
 COPY --chown=appuser:appuser . .
+#copy cron req
+COPY etc/crontab /app/etc/crontab
+COPY reset_tokens.sh /app/reset_tokens.sh
+COPY run.sh /app/run.sh
+RUN chmod +x /app/*.sh
+CMD ["/app/run.sh"]
+#USER appuser
 
-USER appuser
 
-CMD ["gunicorn", "reportsite.wsgi:application", "--bind", "0.0.0.0:10000","--log-level", "debug", "--access-logfile", "-", "--error-logfile", "-", "--workers=1", "--threads=2"]
 

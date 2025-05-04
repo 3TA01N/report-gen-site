@@ -1,6 +1,7 @@
 import {useState, useEffect } from "react"
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
+import { TextField, Alert, Button,Paper, Box, Typography, Container, Link } from '@mui/material';
 
 
 function Register () {
@@ -13,6 +14,9 @@ function Register () {
         password1: "",
         password2: "",
     })
+    const handleNav = () => {
+        navigate('/login');
+    }
     const [loginData, setLoginData] = useState({
         email: "",
         password: "",
@@ -55,6 +59,7 @@ function Register () {
         }
         setIsLoading(true)
         setError(null);
+        console.log("starting register response")
         axios({
             url: `${import.meta.env.VITE_BACKEND_URL}/api/register/`,
             method: "POST",
@@ -94,37 +99,93 @@ function Register () {
 
     }
     return (
-        <div>
-            {error && (
-                <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                {error}
-                <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"
-                    onClick={() => setError(null)}
-                ></button>
-                </div>
-            )}
-            <h2>Register</h2>
-            <form onSubmit={handleSubmit} action="#" method="post" autoComplete="off">
-                <label>username:</label><br/>
-                <input type="text" name = "username" value={formData.username} onChange={handleChange} autoComplete="off">
-                </input>
-                <br/>
-                <label>email:</label><br/>
-                <input type="text" name = "email" value={formData.email} onChange={handleChange} autoComplete="off"></input>
-                <br/>
-                <label>password:</label><br/>
-                <input type="password" name = "password1" value={formData.password1} onChange={handleChange} autoComplete="new-password"></input>
-                <br/>
-                <label>confirm password:</label><br/>
-                <input type="password" name = "password2" value={formData.password2} onChange={handleChange} autoComplete="new-password"></input>
-                <br/>
-                <button type="submit" disabled={isLoading}>Register</button>
-            </form>
-        </div>
+        <Container component="main" maxWidth="xs" sx={{paddingTop: 2}}>
+            <Paper
+                sx={{
+                    borderRadius: 0,
+                    paddingTop: 2,
+                    paddingLeft: 2,
+                    paddingRight: 2,
+                    paddingBottom: 2,
+                }}
+                >
+                {error && (
+                    <Alert
+                        severity="error"
+                        onClose={() => setError(null)}
+                        sx={{ mb: 2}}
+                    >
+                        {error}
+                    </Alert>
+                )}
+                <Typography variant="h5">Register</Typography>
+                <Box component="form" sx={{ mt: 2 }}>
+                    <TextField
+                        label="Username"
+                        name="username"
+                        variant="outlined"
+                        fullWidth
+                        margin="normal"
+                        value={formData.username}
+                        onChange={handleChange}
+                    />
+                    <TextField
+                        label="Email Address"
+                        name="email"
+                        variant="outlined"
+                        fullWidth
+                        margin="normal"
+                        value={formData.email}
+                        onChange={handleChange}
+                    />
+                    <TextField
+                        label="Password"
+                        name="password1"
+                        variant="outlined"
+                        type="password"
+                        fullWidth
+                        margin="normal"
+                        value={formData.password1}
+                        onChange={handleChange}
+                    />
+                    <TextField
+                        label="Confirm password"
+                        name="password2"
+                        variant="outlined"
+                        type="password"
+                        fullWidth
+                        margin="normal"
+                        value={formData.password2}
+                        onChange={handleChange}
+                    />
+                    <Button
+                        variant="contained"
+                        fullWidth
+                        sx={{ mt: 2 }}
+                        disabled={isLoading}
+                        onClick={handleSubmit}
+                    >
+                        Register
+                    </Button>
+                    <Link
+                        component="button"
+                        variant="body2"
+                        onClick={handleNav}
+                        sx={{
+                            display: 'block',
+                            textAlign: 'center',
+                            color: 'primary.main',
+                            textDecoration: 'none',
+                            fontSize: '14px',
+                            marginTop: 2,
+                        }}
+                    >
+                        Login
+                    </Link>
+                </Box>
+            </Paper>
+        </Container>
+        
     )
 }
 

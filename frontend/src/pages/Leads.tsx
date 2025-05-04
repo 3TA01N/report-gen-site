@@ -2,8 +2,19 @@ import LeadForm from "../components/LeadForm";
 import React, { useState, useEffect } from 'react';
 import api from "../components/api"
 import { useLocation } from 'react-router-dom'
-import Loader from "../components/Loader"
+import { Link as RouterLink } from 'react-router-dom';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
+import {
+    Alert,
+    Box,
+    CircularProgress,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+    Typography,
+  } from '@mui/material';
 function Leads () {
     const [name, setName] = useState('')
     const [description, setDescription] = useState('')
@@ -62,36 +73,74 @@ function Leads () {
         setDescription('')
     }
     return (
-        <div>
+        <Box sx={{ display: 'flex', width: '100%', minHeight: '100vh'}}>
             {error && (
-                <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                {error}
-                <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"
-                    onClick={() => setError(null)}
-                ></button>
-                </div>
+                <Alert
+                    severity="error"
+                    onClose={() => setError(null)}
+                    sx={{ mb: 2}}
+                >
+                    {error}
+                </Alert>
             )}
-            <h3>Create a new Team Lead</h3>
-            <LeadForm 
-            name={name}
-            description={description}
-            onNameChange={(e) => setName(e.target.value)}
-            onDescriptionChange={(e) => setDescription(e.target.value)}
-            onSubmit={formSubmit}
-            />
-            {isLoading && <Loader />}
-            <h3>Current team leads</h3>
-            <div className="list-group">
-            {leads.map((lead) => (
-                <a href={`/leads/${lead.name}/`} className="list-group-item list-group-item-action">{lead.name}</a>
-            ))}
-            
-            </div>
-        </div>
+            <Box sx = {{display: 'flex', width: '100%'}}>
+                <Box
+                    sx={{
+                        flex: 3,
+                        px: 4, // Adjust left/right padding here
+                        py: 4,
+                    }}
+                >
+                    <Typography variant="h5" color="primary" gutterBottom>Create Lead</Typography>
+                    <LeadForm 
+                        name={name}
+                        description={description}
+                        onNameChange={(e) => setName(e.target.value)}
+                        onDescriptionChange={(e) => setDescription(e.target.value)}
+                        onSubmit={formSubmit}
+                    />
+                    {isLoading &&
+                        <Box sx={{ mt: 3 }}>
+                            <CircularProgress />
+                        </Box>
+                    }
+                <Box sx={{ mt: 4 }}>
+                    <Typography variant="h5" gutterBottom>
+                        Current Leads
+                    </Typography>
+                    <List>
+                        {leads.map((lead) => (
+                            <ListItem disablePadding key={lead.name}>
+                                <ListItemButton
+                                    component={RouterLink}
+                                    to={`/leads/${lead.name}/`}
+                                    >
+                                    <ListItemText primary={lead.name} />
+                                    <ChevronRightIcon sx={{ color: 'text.secondary' }} />
+
+                                
+                                </ListItemButton>
+                            </ListItem>
+                        ))}
+                    </List>
+                </Box>
+            </Box>
+            {/*sidebar */}
+            <Box
+                    sx={{
+                        flex: 1, // 25% of total width
+                        backgroundColor: '#808080',
+                        p: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                {/* Example: an image */}
+                
+                </Box>
+            </Box>
+        </Box>
 
 
         

@@ -2,6 +2,25 @@ import React, { useState, useEffect } from 'react';
 import MultiselectPapers from './MultiselectPapers';
 import MultiselectAgents from './MultiselectAgents';
 import api from '../components/api'
+
+import {
+    List,
+    ListItem,
+    ListItemText,
+    FormControl,
+    Select,
+    MenuItem,
+    IconButton,
+    TextField,
+    Button,
+    SelectChangeEvent,
+    Box,
+    Typography,
+    InputLabel,
+  } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+
+
 interface ReportFormProps {
     
     name: string;//char field
@@ -28,12 +47,13 @@ interface ReportFormProps {
     onCyclesChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onMethodChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
     onTemperatureChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onEngineChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-    onModelChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-    onLeadChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+    onEngineChange: (e: SelectChangeEvent<string>) => void;
+    onModelChange: (e: SelectChangeEvent<string>) => void;
+    onLeadChange: (e: SelectChangeEvent<string>) => void;
     onSubmit: (e: React.FormEvent) => void;
+    onRemoveFile: (index: number) => void;
 }
-function ReportForm({name, task, onSelectFileChange, onSelectAgentChange, expectations, description,reportGuidelines, uploadedFiles, cycles, temperature, onFilesChange,onNameChange, onTaskChange, onLeadChange,onCyclesChange, onExpectationsChange, onEngineChange, onReportGuidelinesChange, onModelChange, onDescriptionChange, onTemperatureChange,onSubmit}: ReportFormProps) {
+function ReportForm({name, task, onSelectFileChange, onRemoveFile, onSelectAgentChange, expectations, description,reportGuidelines, uploadedFiles, cycles, temperature, onFilesChange,onNameChange, onTaskChange, onLeadChange,onCyclesChange, onExpectationsChange, onEngineChange, onReportGuidelinesChange, onModelChange, onDescriptionChange, onTemperatureChange,onSubmit}: ReportFormProps) {
     const [leadsList, setLeadsList] = useState<any[]>([])
     useEffect(() => {
         const getLeads = async() => {
@@ -51,165 +71,166 @@ function ReportForm({name, task, onSelectFileChange, onSelectAgentChange, expect
     
     
     return (
-        <form onSubmit={onSubmit}>
-        <div className="mb-3">
-            <label htmlFor="name" className="form-label">Name</label>
-            <input 
-            type="text" 
-            className="form-control" 
-            id="name"
-            value={name}
-            onChange={onNameChange}
-            required
-            />
-        </div>
-        <div className="mb-3">
-            <label htmlFor="description" className="form-label">Description</label>
-            <input 
-            type="text" 
-            className="form-control" 
-            id="description"
-            value={description}
-            onChange={onDescriptionChange}
-            required
-            />
-        </div>
-        <div className="mb-3">
-            <label htmlFor="task" className="form-label">Task</label>
-            <input 
-            type="text" 
-            className="form-control input-lg" 
-            id="description"
-            value={task}
-            onChange={onTaskChange}
-            required
-            />
-        </div>
-        <div className="mb-3">
-            <label htmlFor="task" className="form-label">Expectations</label>
-            <input 
-            type="text" 
-            className="form-control" 
-            id="description"
-            value={expectations}
-            onChange={onExpectationsChange}
-            required
-            />
-        </div>
-        <div className="mb-3">
-            <label htmlFor="reportGuidelines" className="form-label">Report Guidelines</label>
-            <input 
-            type="text" 
-            className="form-control" 
-            id="report guidelines"
-            value={reportGuidelines}
-            onChange={onReportGuidelinesChange}
-            required
-            />
-        </div>
-
-        <MultiselectAgents passNamesToParent={onSelectAgentChange}/>
-        <MultiselectPapers passNamesToParent={onSelectFileChange}/>
-        
-        <div className="mb-3">
-            <label htmlFor="file" className="form-label">Context files pdf</label>
-            <input 
-            className="form-control" 
-            type="file" 
-            id="formFile" 
-            multiple
-            onChange={onFilesChange}
-            />
-        </div>
-        <div className="uploaded-files-list">
-            {uploadedFiles.map(file => (
-                <div>
-                    {file.name}
-                </div>
-            ))} 
-        </div>
-
-
-        <div className="mb-3">
-            <label htmlFor="reportGuidelines" className="form-label">Number of cycles (leave blank for 1, max is 4)</label>
-            <input 
-            type="number" 
-            className="form-control" 
-            id="cycles"
-            value={cycles}
-            onChange={onCyclesChange}
-            max={4}
-            />
-        </div>
-
-        <div className="mb-3">
-            <label htmlFor="reportGuidelines" className="form-label">Temperature (leave blank for 0.8)</label>
-            <input 
-            type="number" 
-            className="form-control" 
-            id="temp"
-            value={temperature}
-            onChange={onTemperatureChange}
+        <Box>
+            <Box component="form" onSubmit={onSubmit} display="flex" flexDirection="column" gap={3}>
+                <TextField
+                    label="Name"
+                    variant="outlined"
+                    value={name}
+                    onChange={onNameChange}
+                    required
+                    fullWidth
+                />
             
-            />
-        </div>
-        {/*
-        <div className="select">
-            <label htmlFor="method" className="form-label">Method</label>
-            <select 
-            className="form-select"
-            onChange={onMethodChange}
-            >
-            <option selected>Choose conversation method</option>
-            <option value="1">1. </option>
-            <option value="2">2. </option>
-            required
-            </select>
+                <TextField
+                    label="Description"
+                    variant="outlined"
+                    value={description}
+                    onChange={onDescriptionChange}
+                    required
+                    fullWidth
+                />
+                <TextField
+                    label="Task"
+                    variant="outlined"
+                    value={task}
+                    onChange={onTaskChange}
+                    required
+                    fullWidth
+                />
+                <TextField
+                    label="Expectations"
+                    variant="outlined"
+                    value={expectations}
+                    onChange={onExpectationsChange}
+                    required
+                    fullWidth
+                />
+                <TextField
+                    label="Report Guidelines"
+                    variant="outlined"
+                    value={reportGuidelines}
+                    onChange={onReportGuidelinesChange}
+                    required
+                    fullWidth
+                />
             
-        </div>
-        */}
-        <div className="select">
-            <label htmlFor="method" className="form-label">Engine (leave blank for openai)</label>
-            <select 
-            className="form-select"
-            onChange={onEngineChange}
-            >
-            <option selected>Choose engine</option>
-            <option value="Ollama" disabled>Ollama </option>
-            <option value="openai">OpenAI </option>
-            </select>
-           
-        </div>
-        <div className="select">
-            <label htmlFor="method" className="form-label">Model (leave blank for gpt4o)</label>
-            <select 
-            className="form-select"
-            onChange={onModelChange}
-            >
-            <option selected>Choose model</option>
-            <option value="mistral" disabled>Ollama: mistral </option>
-            <option value="gpt-4o">gpt-4o</option>
-            </select>
-           
-        </div>
-        
-        <div className="select">
-            <label htmlFor="method" className="form-label">Lead</label>
-            <select 
-            className="form-select"
-            onChange={onLeadChange}
-            required
-            >
-            <option selected value="">Choose lead</option>
-            {leadsList.map((cur_lead) => (
-                <option value={cur_lead.name}>{cur_lead.name} </option>
-            ))}
-            </select>
-           
-        </div>
-        <button type="submit" className="btn btn-primary">Submit</button>
-        </form>
 
+                <MultiselectAgents passNamesToParent={onSelectAgentChange}/>
+                <MultiselectPapers passNamesToParent={onSelectFileChange}/>
+            
+                <Box>
+                    <InputLabel htmlFor="formFile" sx={{ mb: 1 }}>
+                        Or Upload new paper(s) as PDF
+                    </InputLabel>
+                    <input
+                        type="file"
+                        id="formFile"
+                        multiple
+                        onChange={onFilesChange}
+                        style={{ color: 'white' }}
+                    />
+                </Box>
+                
+                {uploadedFiles.length > 0 && (
+                    <Box>
+                        <Typography variant="subtitle1" sx={{ mt: 2 }}>
+                        Selected Files:
+                        </Typography>
+
+                        <List dense>
+                        {uploadedFiles.map((file, index) => (
+                            <ListItem
+                            key={index}
+                            secondaryAction={
+                                <IconButton edge="end" aria-label="delete" onClick={() => onRemoveFile(index)}>
+                                <DeleteIcon />
+                                </IconButton>
+                            }
+                            >
+                            <ListItemText primary={file.name} />
+                            </ListItem>
+                        ))}
+                        </List>
+                    </Box>
+                )}
+                
+                <TextField
+                    label="Number of cycles (leave blank for 1, max is 4)"
+                    variant="outlined"
+                    value={cycles}
+                    onChange={onCyclesChange}
+                    required
+                    type="number"
+                    fullWidth
+                />
+
+                <TextField
+                    label="Temperature (leave blank for 0.8)"
+                    variant="outlined"
+                    value={temperature}
+                    onChange={onTemperatureChange}
+                    required
+                    type="number"
+                    fullWidth
+                />
+                {/* Engine Select */}
+                <FormControl fullWidth>
+                    <InputLabel>Engine (leave blank for openai)</InputLabel>
+                    <Select
+                    defaultValue=""
+                    onChange={onEngineChange}
+                    label="Engine (leave blank for openai)"
+                    >
+                    <MenuItem value="">
+                        <em>Choose engine</em>
+                    </MenuItem>
+                    <MenuItem value="Ollama" disabled>Ollama</MenuItem>
+                    <MenuItem value="openai">OpenAI</MenuItem>
+                    </Select>
+                </FormControl>
+
+                {/* Model Select */}
+                <FormControl fullWidth>
+                    <InputLabel>Model (leave blank for gpt4o)</InputLabel>
+                    <Select
+                    defaultValue=""
+                    onChange={onModelChange}
+                    label="Model (leave blank for gpt4o)"
+                    >
+                    <MenuItem value="">
+                        <em>Choose model</em>
+                    </MenuItem>
+                    <MenuItem value="mistral" disabled>Ollama: mistral</MenuItem>
+                    <MenuItem value="gpt-4o">gpt-4o</MenuItem>
+                    </Select>
+                </FormControl>
+
+                {/* Lead Select */}
+                <FormControl fullWidth required>
+                    <InputLabel>Lead</InputLabel>
+                    <Select
+                    defaultValue=""
+                    onChange={onLeadChange}
+                    label="Lead"
+                    >
+                    <MenuItem value="">
+                        <em>Choose lead</em>
+                    </MenuItem>
+                    {leadsList.map((cur_lead) => (
+                        <MenuItem key={cur_lead.name} value={cur_lead.name}>
+                        {cur_lead.name}
+                        </MenuItem>
+                    ))}
+                    </Select>
+                </FormControl>
+
+            <Button variant="contained" color="primary" type="submit">
+                Submit
+            </Button>
+
+            </Box>
+        </Box>
     )
 }
 

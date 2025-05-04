@@ -1,5 +1,18 @@
 import { useState, useEffect } from 'react';
 import api from "../components/api"
+import { Link as RouterLink } from 'react-router-dom';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+
+
+import {
+    Alert,
+    Box,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+    Typography,
+} from '@mui/material';
 
 function Reports () {
     const [reports, setReports] = useState<any[]>([])
@@ -10,6 +23,7 @@ function Reports () {
             try {
                 const response = await api.get('/reports/')
                 setReports(response.data)
+                console.log(reports)
             }
             catch (error: any) {
                 console.log('Error fetching reports', error.response)
@@ -20,41 +34,62 @@ function Reports () {
 
     
     return (
-        <div>
-        {error && (
-            <div className="alert alert-danger alert-dismissible fade show" role="alert">
-            {error}
-            <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="alert"
-                aria-label="Close"
-                onClick={() => setError(null)}
-            ></button>
-            </div>
-        )}
-        <h3>Current reports</h3>
-        <div className="list-group">
-        {reports.map((report) => (
-            
-            <div className="d-flex bd-highlight">
-                <div className = "p-2 flex-fill bd-highlight">
-                    <a 
-                    href= {`/reports/${report.name}/`}
-                    className="list-group-item list-group-item-action"
-                    >
-                    {report.name}
-                    </a>
-                </div>
-                <div className = "p-2 flex-fill bd-highlight">
-                </div>
+        <Box sx={{ display: 'flex', width: '100%', minHeight: '100vh',}}>
+                
+        
+            {error && (
+                <Alert
+                    severity="error"
+                    onClose={() => setError(null)}
+                    sx={{ mb: 2}}
+                >
+                    {error}
+                </Alert>
+            )}
+            <Box sx={{ mt: 4,width: '100%'}}>
+                <Typography variant="h5" gutterBottom>
+                    Current Reports
+                </Typography>
+                
+                <List>
+                    {reports.map((report) => (
+                        <ListItem disablePadding key={report.name}>
+                            <ListItemButton
+                                component={RouterLink}
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    px: 3,
+                                    py: 2,
+                                    width: '100%',
+                                    borderRadius: 1,
+                                    '&:hover': {
+                                      backgroundColor: 'action.hover',
+                                      boxShadow: 1,
+                                    },
+                                }}
 
-            </div>
-        ))}
-        </div>
-        </div>
+                                to={`/reports/${report.name}/`}
+                            >
+                                <ListItemText primary={report.name} />
+                                <Typography variant="body2" color="text.secondary">
+                                    {new Date(report.date).toLocaleDateString(undefined, {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    })}
+                                </Typography>
+                                <ChevronRightIcon sx={{ color: 'text.secondary' }} />
 
+                            
+                            </ListItemButton>
+                        </ListItem>
+                    ))}
+                </List>
+            </Box>
 
+        </Box>
         
 
     );

@@ -1,8 +1,9 @@
 import { useParams } from "react-router";
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
 import api from '../components/api'
+import { Container, Typography, Button, Stack, Box, Link as MuiLink } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 
 
 function LeadPage() {
@@ -38,28 +39,44 @@ function LeadPage() {
         
     }, [])
     return (
-        <div className="container my-4">
-            <h3>{name}</h3>
-            <div className="mb-3">
-                <p><strong>Lead description:</strong> {description}</p>
-            </div>
-            <div className="mb-3">
-                <h5 className="font-weight-bold">Reports generated with this lead:</h5>
-                {reports.map((report) => (
-                    <Link to={`/reports/${report.name}`} className="text-primary">
-                        {report.name} (click to navigate to report page)
-                    </Link>
-                ))}
-
-            </div>
-
-            <div className="d-flex justify-content-start">
-                <button type="button" className="btn btn-danger mr-2" onClick={deleteClicked}>Delete</button>
-                
-            </div>
-        </div>
-        
-  )
+        <Container sx={{ my: 4 }}>
+          <Typography variant="h4" gutterBottom>
+            {name}
+          </Typography>
+    
+          <Box mb={3}>
+            <Typography variant="subtitle1" fontWeight="bold">
+              Lead description:
+            </Typography>
+            <Typography variant="body1">{description}</Typography>
+          </Box>
+    
+          <Box mb={3}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              Reports generated with this lead:
+            </Typography>
+            <Stack spacing={1}>
+              {reports.map((report) => (
+                <MuiLink 
+                  key={report.name} 
+                  component={RouterLink} 
+                  to={`/reports/${report.name}`} 
+                  color="primary"
+                  underline="hover"
+                >
+                  {report.name} (click to navigate to report page)
+                </MuiLink>
+              ))}
+            </Stack>
+          </Box>
+    
+          <Stack direction="row" spacing={2}>
+            <Button variant="contained" color="error" onClick={deleteClicked}>
+              Delete
+            </Button>
+          </Stack>
+        </Container>
+      );
 }
 
 export default LeadPage

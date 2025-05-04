@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
 import api from './api'
+import {
+    Autocomplete,
+    TextField,
+    Box,
+    Typography,
+    AutocompleteChangeReason,
+    AutocompleteChangeDetails,
+  } from '@mui/material';
 type OptionType = {
     value: string;
     label: string;
@@ -13,13 +20,14 @@ type MultiSelectPapersProps = {
 const MultiselectPapers: React.FC<MultiSelectPapersProps> =({passNamesToParent}) => {
     const [papersOptions, setOptions] = useState<OptionType[] | undefined>([])//Store options for multiselect
     
-    const handleSelectPapersChange = (selectedFiles: readonly OptionType[] | null) => {
-        const namesList = selectedFiles ? selectedFiles.map(file => file.value): [];
-        passNamesToParent(namesList)
-        
-
-        
-    }
+    const handleSelectPapersChange = (
+        _event: React.SyntheticEvent,
+        value: OptionType[],
+        _reason: AutocompleteChangeReason,
+        _details?: AutocompleteChangeDetails<OptionType>
+      ) => {
+        passNamesToParent(value.map((v) => v.label));
+      };
     useEffect(() => {
         const getPapers = async() => {
             try {
@@ -38,16 +46,21 @@ const MultiselectPapers: React.FC<MultiSelectPapersProps> =({passNamesToParent})
     },[]);
 
     return (
-        <div className="select">
-            <label htmlFor="method" className="form-label">Choose from existing papers:</label>
-            <Select 
-            isMulti
-            className="basic-multi-select"
-            classNamePrefix="select"
+        
+        <Box>
+        <Typography variant="body1" sx={{ mb: 1 }}>
+            Choose from existing papers:
+        </Typography>
+        <Autocomplete
+            multiple
+            options={papersOptions || []}
+            getOptionLabel={(option) => option.label}
             onChange={handleSelectPapersChange}
-            options = {papersOptions}
-            />
-        </div>
+            renderInput={(params) => (
+            <TextField {...params} variant="outlined" label="Papers" />
+            )}
+        />
+        </Box>
     )
 }
 

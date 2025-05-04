@@ -1,6 +1,7 @@
 import {useState} from "react"
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
+import { TextField, Alert, Button,Paper, Box, Typography, Container, Link } from '@mui/material';
 
 
 function Login () {
@@ -12,10 +13,10 @@ function Login () {
         password: "",
     })
     const handleChange = (e:any) => {
-        setFormData({
-            ...formData,
-            [e.target.name]:e.target.value
-        })
+        setFormData((prevData) => ({
+            ...prevData,
+            [e.target.name]: e.target.value
+        }));
     }
     const handleAxiosError = (error:any) => {
         //check if network error
@@ -69,34 +70,74 @@ function Login () {
     };
     
     return (
-        <div>
-            {error && (
-                <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                {error}
-                <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"
-                    onClick={() => setError(null)}
-                ></button>
-                </div>
-            )}
-            <h2>Login</h2>
-            <form>
-                
-                <input type="text" name = "email" value={formData.email} onChange={handleChange}></input>
-                <br/>            
-                <label>password:</label><br/>
-                <input type="password" name = "password" value={formData.password} onChange={handleChange}></input>
-                <br/>
-                <div>
-                    <button type="submit" disabled={isLoading} onClick={handleSubmit}>Login</button>
-                    
-                </div>
-            </form>
-            <button onClick={handleNav} style={{ color: 'blue', background: 'none', border: 'none' }}>Register</button>
-        </div>
+        <Container component="main" maxWidth="xs" sx={{paddingTop: 2}}>
+            <Paper
+                sx={{
+                    borderRadius: 0,
+                    paddingTop: 2,
+                    paddingLeft: 2,
+                    paddingRight: 2,
+                    paddingBottom: 2,
+                }}
+                >
+                {error && (
+                    <Alert
+                        severity="error"
+                        onClose={() => setError(null)}
+                        sx={{ mb: 2}}
+                    >
+                        {error}
+                    </Alert>
+                )}
+                <Typography variant="h5">Sign In</Typography>
+                <Box component="form" sx={{ mt: 2 }}>
+                    <TextField
+                        label="Email Address"
+                        name="email"
+                        variant="outlined"
+                        fullWidth
+                        margin="normal"
+                        value={formData.email}
+                        onChange={handleChange}
+                    />
+                    <TextField
+                        label="Password"
+                        name="password"
+                        variant="outlined"
+                        type="password"
+                        fullWidth
+                        margin="normal"
+                        value={formData.password}
+                        onChange={handleChange}
+                    />
+                    <Button
+                        variant="contained"
+                        fullWidth
+                        disabled={isLoading}
+                        sx={{ mt: 2 }}
+                        onClick={handleSubmit}
+                    >
+                        Sign In
+                    </Button>
+
+                    <Link
+                        component="button"
+                        variant="body2"
+                        onClick={handleNav}
+                        sx={{
+                            display: 'block',
+                            textAlign: 'center',
+                            color: 'primary.main',
+                            textDecoration: 'none',
+                            fontSize: '14px',
+                            marginTop: 2,
+                        }}
+                    >
+                        Don’t have an account? Register
+                    </Link>
+                </Box>
+            </Paper>
+        </Container>
     )
 }
 

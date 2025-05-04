@@ -1,0 +1,2 @@
+SHELL=/bin/sh
+0 0 * * * /app/reset_tokens.sh >> /app/var/log/cron.log 2>&1

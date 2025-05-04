@@ -3,12 +3,16 @@ import { ReactNode } from "react";
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import api from "./api"
+import { Box } from '@mui/material';
+
+
 
 interface Props {
     children?: ReactNode
 }
 
 export default function Layout({ children, ...props }: Props) {
+    
     const [isLoggedIn, setLoggedIn] = useState<boolean | null>(false)
     const [username, setUsername] = useState("")
     const navigate = useNavigate();
@@ -32,6 +36,7 @@ export default function Layout({ children, ...props }: Props) {
           console.error("Failed to logout", error.response?.data || error.message)
         }
       }
+    
     useEffect (()=>{
         const checkLoggedInUser = async () => {
             try {
@@ -69,9 +74,11 @@ export default function Layout({ children, ...props }: Props) {
         return <div>Loading...</div>;
     }
     return (
-        <div key = {isLoggedIn ? "loggedIn": "loggedOut"} {...props}>
-            {isLoggedIn ? (<NavBar handleLogout={handleLogout}/>) :<></> }
-            {children}
-        </div>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+            <div style={{ height: '100%' }} key = {isLoggedIn ? "loggedIn": "loggedOut"} {...props}>
+                {isLoggedIn ? (<NavBar handleLogout={handleLogout}/>) :<></> }
+                {children}
+            </div>
+        </Box>
     )
 }

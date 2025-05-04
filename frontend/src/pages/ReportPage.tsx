@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from "react-router";
-import { Link } from 'react-router-dom';
-import Loader from '../components/Loader'
+//import { Link } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import api from '../components/api'
+import { Container, Typography, Button, Stack, Box, CircularProgress, List, ListItem, Link as MuiLink, Alert} from '@mui/material';
 
 function ReportPage() {
     
     const { name } = useParams()
+    
     const [chat_log, setChatLog] = useState()
     const [context, setContext] = useState<any[]>([]) 
     //const [cycles, setCycles] = useState() 
@@ -43,6 +45,7 @@ function ReportPage() {
             try {
                 
                 const response = await api.get(`/reports/${name}/`)
+                console.log(response.data)
                 setChatLog(response.data.chat_log)
                 setContext(response.data.context)
                 //setCycles(response.data.cycles)
@@ -80,74 +83,95 @@ function ReportPage() {
     }
 
     return (
-        <div className="container my-4">
+        <Container sx={{ my: 4 }}>
             {error && (
-                <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                {error}
-                <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"
-                    onClick={() => setError(null)}
-                ></button>
-                </div>
+                <Alert
+                    severity="error"
+                    onClose={() => setError(null)}
+                    sx={{ mb: 2}}
+                >
+                    {error}
+                </Alert>
             )}
-            <h3>{name}</h3>
+            <Typography variant="h4" gutterBottom>
+                {name}
+            </Typography>
             
-            <div className="mb-3">
-                <h5 className="font-weight-bold">Links:</h5>
-                <ul>
-                    <li><a href={output} className="text-primary" target="_blank">Report text</a></li>
-                    <li><a href={chat_log} className="text-primary" target="_blank">Chat log</a></li>
-                </ul>
-            </div>
-
-            <div className="mb-3">
-                <h5 className="font-weight-bold">Lead Information:</h5>
-                <p><strong>Lead name:</strong> {lead_name}</p>
-                <p><strong>Task:</strong> {task}</p>
-            </div>
-
-            <div className="mb-3">
-                <h5 className="font-weight-bold">Chosen Agents:</h5>
-                {chosenTeam.map((agent) => (
-                    <Link to={`/agents/${agent.name}`} className="text-primary">
+            <Box mb={3}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                    Links:
+                </Typography>
+                <List>
+                    <ListItem>
+                        <MuiLink href={output} target="_blank" rel="noopener noreferrer" color="primary" underline="hover">Report text</MuiLink>
+                    </ListItem>
+                    <ListItem>
+                        <MuiLink href={chat_log} target="_blank" rel="noopener noreferrer" color="primary" underline="hover">Report log</MuiLink>
+                    </ListItem>
+                </List>
+            </Box>
+            
+            <Box mb={3}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                    Lead Information:
+                </Typography>
+                <Typography><strong>Lead name:</strong> {lead_name}</Typography>
+                <Typography><strong>Task:</strong> {task}</Typography>
+            </Box>
+            <Box mb={3}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                    Chosen Agents:
+                </Typography>
+                <Stack spacing={1}>
+                    {chosenTeam.map((agent) => (
+                    <MuiLink
+                        key={agent.name}
+                        component={RouterLink}
+                        to={`/agents/${agent.name}`}
+                        color="primary"
+                        underline="hover"
+                    >
                         {agent.name} (click to navigate to agent page)
-                    </Link>
-                ))}
-
-            </div>
-
-            <div className="mb-3">
-                <h5 className="font-weight-bold">Provided Context Files:</h5>
-                <ul className="list-unstyled">
-                    {context.map((file, index) => (
-                        <li key={index}>
-                            <a href={file.file} target="_blank" className="text-secondary">
-                                {file.name}
-                            </a>
-                        </li>
+                    </MuiLink>
                     ))}
-                </ul>
-            </div>
+                </Stack>
+            </Box>
+            <Box mb={3}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                    Provided Context Files:
+                </Typography>
+                <List sx={{ pl: 0 }}>
+                    {context.map((file, index) => (
+                    <ListItem key={index} sx={{ display: 'list-item', listStyleType: 'disc', pl: 2 }}>
+                        <MuiLink href={file.file} target="_blank" rel="noopener noreferrer" color="secondary" underline="hover">
+                        {file.name}
+                        </MuiLink>
+                    </ListItem>
+                    ))}
+                </List>
+            </Box>
 
-            <div className="mb-3">
-                <p><strong>Engine:</strong> {engine}</p>
-                <p><strong>Model:</strong> {model}</p>
-                <p><strong>Expectations:</strong> {expectations}</p>
-            </div>
+            <Box mb={3}>
+                <Typography><strong>Engine:</strong> {engine}</Typography>
+                <Typography><strong>Model:</strong> {model}</Typography>
+                <Typography><strong>Expectations:</strong> {expectations}</Typography>
+            </Box>
 
-            <div className="d-flex justify-content-start">
-                <button type="button" className="btn btn-danger mr-2" onClick={deleteClicked}>Delete</button>
-                <button disabled={savedToLead} type="button" className="btn btn-warning" onClick={() => saveReportMemory(name)}>
+            <Stack direction="row" spacing={2} alignItems="center">
+                <Button variant="contained" color="error" onClick={deleteClicked}>
+                    Delete
+                </Button>
+                <Button
+                    variant="contained"
+                    color="warning"
+                    onClick={() => saveReportMemory(name)}
+                    disabled={savedToLead}
+                >
                     Save report in lead memory
-                </button>
-                {isLoading && <div>
-                    <Loader />
-                </div>}
-            </div>
-        </div>
+                </Button>
+                {isLoading && <CircularProgress size={24} />}
+            </Stack>
+    </Container>
   )
 }
 

@@ -13,11 +13,15 @@ import Register from './pages/Register'
 import Reports from './pages/Reports'
 import ReportPage from './pages/ReportPage'
 import "./App.css"
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import theme from './components/theme';
 
 function App() {
   
   return ( 
   <Router>
+    <ThemeProvider theme={theme}>
+    <CssBaseline />
     <Layout>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -34,6 +38,7 @@ function App() {
         <Route path="/reports/:name" element = {< ReportPage />} />
       </Routes>
     </Layout>
+    </ThemeProvider>
   </Router>
   );
 }

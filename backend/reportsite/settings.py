@@ -34,7 +34,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 DAILY_TOKEN_LIMIT = int(os.environ.get('DAILY_TOKEN_LIMIT'))
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get("DEBUG", default=0))
-if (os.getenv('RENDER') is not None or os.getenv("FLY_APP_NAME") is None):
+if (os.getenv('RENDER') is not None or os.getenv("FLY_APP_NAME") is not None):
     CORS_ALLOWED_ORIGIN_REGEXES=os.environ.get("DJANGO_CORS_ALLOWED_ORIGIN_REGEXES").split(",")
     print("REGEX:", CORS_ALLOWED_ORIGIN_REGEXES)
 
@@ -142,8 +142,9 @@ WSGI_APPLICATION = 'reportsite.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
+print(os.environ.get('DJANGO_ENV'))
 if os.environ.get('DJANGO_ENV') == 'production':
+    print("Setting database at url", os.environ.get('DATABASE_URL'))
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL')

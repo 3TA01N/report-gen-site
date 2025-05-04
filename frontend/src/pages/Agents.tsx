@@ -1,7 +1,20 @@
 import AgentForm from "../components/AgentForm";
 import React, { useState, useEffect } from 'react';
-import Loader from "../components/Loader"
 import api from '../components/api'
+import { Link as RouterLink } from 'react-router-dom';
+
+
+import {
+    Alert,
+    Box,
+    CircularProgress,
+    Container,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+    Typography,
+  } from '@mui/material';
 //Multi file upload: files should be a list of files
 //OnFilesChange: setSelectedFiles to an array of file objs
 //FormSubmit: map(for i in SelectedFiles): generate list that can represent 
@@ -31,7 +44,9 @@ function Agents () {
     //strings to the options param?
     //Then there would be no need to unpack here either
     const [agents, setAgents] = useState<any[]>([])
-
+    const handleRemoveFile = (index: number) => {
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+      };
     useEffect(() => {
         const getAgents = async () => {
             try {
@@ -109,51 +124,90 @@ function Agents () {
     }
 
     
-    return (
-        <div>
-            {error && (
-                <div className="alert alert-danger alert-dismissible fade show" role="alert">
+    
+return (
+    <Box sx={{ display: 'flex', width: '100%', minHeight: '100vh'}}>
+        {error && (
+            <Alert
+                severity="error"
+                onClose={() => setError(null)}
+                sx={{ mb: 2}}
+            >
                 {error}
-                <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"
-                    onClick={() => setError(null)}
-                ></button>
-                </div>
-            )}
-            <AgentForm 
-            name={name}
-            role={role}
-            expertise={expertise}
-            onSelectFileChange={onSelectFileChange}//On some amount in multiselect selected, setSelPapers to that list
-            onNameChange={(e) => setName(e.target.value)}
-            onExpertiseChange={(e) => setExpertise(e.target.value)}
-            onRoleChange={(e) => setRole(e.target.value)}
-            onFileChange={onFilesChange}
-            uploadedFiles = {selectedFiles}
-            onSubmit={formSubmit}
-            />
+            </Alert>
 
-            <div className="uploaded-files-list">
-                {selectedFiles.map(file => (
-                    <div>
-                        {file.name}
-                    </div>
-                ))} 
-            </div>
-            {isLoading && <Loader />}
-            <h3>Current agents</h3>
-                <div className="list-group">
-                {agents.map((agent) => (
-                    <a href={`/agents/${agent.name}/`} className="list-group-item list-group-item-action">{agent.name}</a>
-                ))}
-                
-                </div>
-        </div>
+        )}
+        {/*Main content component*/}
+        <Box sx = {{display: 'flex', width: '100%'}}>
+            <Box
+                sx={{
+                    flex: 3,
+                    //height: '100vh',
+                    
+                    px: 4, // Adjust left/right padding here
+                    py: 4,
+                }}
+            >
+                <AgentForm 
+                    name={name}
+                    role={role}
+                    onRemoveFile={handleRemoveFile}
+                    expertise={expertise}
+                    onSelectFileChange={onSelectFileChange}//On some amount in multiselect selected, setSelPapers to that list
+                    onNameChange={(e) => setName(e.target.value)}
+                    onExpertiseChange={(e) => setExpertise(e.target.value)}
+                    onRoleChange={(e) => setRole(e.target.value)}
+                    onFileChange={onFilesChange}
+                    uploadedFiles = {selectedFiles}
+                    onSubmit={formSubmit}
+                />
+                {/*Loading component*/}
+                {isLoading && (
+                    <Box sx={{ mt: 3 }}>
+                        <CircularProgress />
+                    </Box>
+                )}
+                {/*Cur agent display component*/}
+                <Box sx={{ mt: 4 }}>
+                    <Typography variant="h5" gutterBottom>
+                        Current Agents
+                    </Typography>
+                    <List>
+                        {agents.map((agent) => (
+                        <ListItem disablePadding key={agent.name}>
+                            <ListItemButton
+                            component={RouterLink}
+                            to={`/agents/${agent.name}/`}
+                            >
+                            <ListItemText primary={agent.name} />
+                            </ListItemButton>
+                        </ListItem>
+                        ))}
+                    </List>
+                </Box>
 
-    );
+            </Box>
+            {/*sidebar */}
+            <Box
+                sx={{
+                    //height: '100%',
+                    flex: 1, // 25% of total width
+                    backgroundColor: '#808080',
+                    p: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+            {/* Example: an image */}
+            
+            </Box>
+        </Box>
+        
+
+    </Box>
+
+);
 }
 
 export default Agents;

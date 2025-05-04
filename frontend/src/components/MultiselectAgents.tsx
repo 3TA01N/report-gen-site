@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
+import {
+    Autocomplete,
+    TextField,
+    Box,
+    Typography,
+    AutocompleteChangeReason,
+    AutocompleteChangeDetails,
+  } from '@mui/material';
 import api from './api'
 type OptionType = {
     value: string;
@@ -13,13 +20,14 @@ type MultiSelectAgentsProps = {
 const MultiselectPapers: React.FC<MultiSelectAgentsProps> =({passNamesToParent}) => {
     const [agentOptions, setOptions] = useState<OptionType[] | undefined>([])//Store options for multiselect
     
-    const handleSelectAgentsChange = (selectedAgents: readonly OptionType[] | null) => {
-        const namesList = selectedAgents ? selectedAgents.map(file => file.value): [];
-        passNamesToParent(namesList)
-        
-
-        
-    }
+    const handleSelectAgentsChange = (
+        _event: React.SyntheticEvent,
+        value: OptionType[],
+        _reason: AutocompleteChangeReason,
+        _details?: AutocompleteChangeDetails<OptionType>
+      ) => {
+        passNamesToParent(value.map((v) => v.label));
+      };
     useEffect(() => {
         const getAgents = async() => {
             try {
@@ -39,16 +47,22 @@ const MultiselectPapers: React.FC<MultiSelectAgentsProps> =({passNamesToParent})
     },[]);
 
     return (
-        <div className="select">
-            <label htmlFor="method" className="form-label">Choose Potential Agents(or leave empty to allow choosing all) </label>
-            <Select 
-            isMulti
-            className="basic-multi-select"
-            classNamePrefix="select"
-            onChange={handleSelectAgentsChange}
-            options = {agentOptions}
+
+        <Box>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+                Choose Potential Agents(or leave empty to allow choosing all)
+            </Typography>
+            <Autocomplete
+                multiple
+                options={agentOptions || []}
+                getOptionLabel={(option) => option.label}
+                onChange={handleSelectAgentsChange}
+                renderInput={(params) => (
+                <TextField {...params} variant="outlined" label="Agents" />
+                )}
             />
-        </div>
+        </Box>
+        
     )
 }
 

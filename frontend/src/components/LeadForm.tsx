@@ -1,5 +1,15 @@
 import React from "react";
-
+import {
+    List,
+    ListItem,
+    ListItemText,
+    IconButton,
+    TextField,
+    Button,
+    Box,
+    Typography,
+    InputLabel,
+  } from '@mui/material';
 interface LeadFormProps {
     name: string;
     description: string;
@@ -9,32 +19,30 @@ interface LeadFormProps {
 }
 function LeadForm({name, description, onNameChange, onDescriptionChange, onSubmit}: LeadFormProps) {
     return (
-        <form onSubmit={onSubmit}>
-        <div className="mb-3">
-            <label htmlFor="name" className="form-label">Name</label>
-            <input 
-            type="text" 
-            className="form-control" 
-            id="name"
-            value={name}
-            onChange={onNameChange}
-            required
-            />
-        </div>
-        <div className="mb-3">
-            <label htmlFor="description" className="form-label">Description</label>
-            <input 
-            type="text" 
-            className="form-control" 
-            id="description"
-            value={description}
-            onChange={onDescriptionChange}
-            required
-            />
-        </div>
-        <button type="submit" className="btn btn-primary">Submit</button>
-        </form>
-
+        <Box>
+            <Box component="form" onSubmit={onSubmit} display="flex" flexDirection="column" gap={3}>
+                <TextField
+                    label="Name"
+                    variant="outlined"
+                    value={name}
+                    onChange={onNameChange}
+                    required
+                    fullWidth
+                />
+                <TextField
+                    label="Description"
+                    variant="outlined"
+                    value={description}
+                    onChange={onDescriptionChange}
+                    required
+                    fullWidth
+                />
+                
+                <Button variant="contained" color="primary" type="submit">
+                    Submit
+                </Button>
+            </Box>
+        </Box>
     )
 }
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from "react-router";
 import api from "../components/api"
+import { Container, Typography, Button, Stack, Box, Link} from '@mui/material';
 
 
 function AgentPage() {
@@ -35,31 +36,52 @@ function AgentPage() {
         }
     }
     return (
-        <div className="container my-4">
-            <h3>{name}</h3>
-            <div className="mb-3">
-                <p><strong>Lead role:</strong> {role}</p>
-                <p><strong>Lead expertise:</strong> {expertise}</p>
-            </div>
-            <div className="mb-3">
-                <h5 className="font-weight-bold">Files:</h5>
-                {files.map((file) => (
-                    <a 
-                    href= {file.file}
-                    className="text-primary"
+        <Container sx={{ my: 4 }}>
+          <Typography variant="h4" gutterBottom>
+            {name}
+          </Typography>
+        
+          <Box mb={3}>
+            <Typography variant="subtitle1" fontWeight="bold">
+              Agent role:
+            </Typography>
+            <Typography variant="body1">{role}</Typography>
+          </Box>
+
+          <Box mb={3}>
+            <Typography variant="subtitle1" fontWeight="bold">
+              Agent expertise:
+            </Typography>
+            <Typography variant="body1">{expertise}</Typography>
+          </Box>
+    
+          <Box mb={3}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              Files in agent knowledgebase:
+            </Typography>
+            <Stack spacing={1}>
+              {files.map((file) => (
+                <Link 
+                    key={file.name}
+                    href={file.file}
                     target="_blank"
-                    >
+                    rel="noopener noreferrer"
+                    color="primary"
+                    underline="hover"
+                >
                     Download {file.name}
-                    </a>
-                ))}
-
-            </div>
-
-            <div className="d-flex justify-content-start">
-                <button type="button" className="btn btn-danger mr-2" onClick={deleteClicked}>Delete</button>
-                
-            </div>
-        </div>
+                </Link>
+              ))}
+            </Stack>
+          </Box>
+    
+          <Stack direction="row" spacing={2}>
+            <Button variant="contained" color="error" onClick={deleteClicked}>
+              Delete
+            </Button>
+          </Stack>
+        </Container>
+        
     )
 }
 

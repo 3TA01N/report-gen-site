@@ -1,5 +1,5 @@
 # REPORT GEN SITE
-
+https://www.report-gen.app/
 ## Motivation
 Though there are many custom chatbots/tools based around LLMs, and many more that use RAG(retrieval augmented generation), what sets my tool apart is the integration of RAG with AI Agent conversations. 
 This project was based on VirtualLab's (https://github.com/zou-group/virtual-lab) methodology of having conversations facilitated by a lead agent, with the lead agent choosing the agents it wants to use for the task along with a critic to keep the conversation in check. 

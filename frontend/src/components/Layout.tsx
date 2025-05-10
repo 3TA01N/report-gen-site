@@ -13,7 +13,7 @@ interface Props {
 
 export default function Layout({ children, ...props }: Props) {
     
-    const [isLoggedIn, setLoggedIn] = useState<boolean | null>(false)
+    const [isLoggedIn, setLoggedIn] = useState<boolean | null>(null)
     const [username, setUsername] = useState("")
     const navigate = useNavigate();
     const handleLogout = async () => {

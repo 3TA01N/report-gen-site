@@ -129,7 +129,7 @@ function Leads () {
             <Box
                     sx={{
                         flex: 1, // 25% of total width
-                        backgroundColor: '#808080',
+                        backgroundColor: '#00000000',
                         p: 2,
                         display: 'flex',
                         alignItems: 'center',

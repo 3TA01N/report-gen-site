@@ -1,7 +1,7 @@
 import {useState, useEffect } from "react"
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
-import { TextField, Alert, Button,Paper, Box, Typography, Container, Link } from '@mui/material';
+import { TextField, Alert, Button,Paper, CircularProgress, Box, Typography, Container, Link } from '@mui/material';
 
 
 function Register () {
@@ -167,6 +167,11 @@ function Register () {
                     >
                         Register
                     </Button>
+                    {isLoading && (
+                        <Box sx={{ mt: 3 }}>
+                            <CircularProgress />
+                        </Box>
+                    )}
                     <Link
                         component="button"
                         variant="body2"

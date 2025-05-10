@@ -191,7 +191,7 @@ return (
                 sx={{
                     //height: '100%',
                     flex: 1, // 25% of total width
-                    backgroundColor: '#808080',
+                    backgroundColor: '#00000000',
                     p: 2,
                     display: 'flex',
                     alignItems: 'center',

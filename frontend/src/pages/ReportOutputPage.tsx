@@ -3,6 +3,17 @@ import { useLocation } from "react-router-dom"
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../components/api'
+import {
+    Alert,
+    Box,
+    Stack, 
+    Paper,
+    Link,
+    Button,
+    Divider,
+    Container,
+    Typography,
+  } from '@mui/material';
 
 function ReportOutputPage () {
     const navigate = useNavigate();
@@ -358,118 +369,122 @@ function ReportOutputPage () {
     //what to do for report saving:
     //if not want to be saved, then delete the obj
     return (
-        
-        <div className="flex flex-col items-center p-4 space-y-4 w-full max-w-lg mx-auto">
-            {error && (
-                <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                {error}
-                <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"
-                    onClick={() => setError(null)}
-                ></button>
-                </div>
-            )}
-            {(moveOn !== true) && (
-                <div className="flex flex-col justify-center items-center h-screen space-y-6 p-6 bg-gray-50">
-    
+        <Container maxWidth="md" sx = {{py:4}}>
 
-                    <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-2xl space-y-4">
-                    <h2 className="text-xl font-bold text-gray-800 border-b pb-2">Report status</h2>
-                    
-                    <p className="text-md font-medium text-gray-700">
+            <Alert
+                severity="error"
+                onClose={() => setError(null)}
+                sx={{ mb: 2}}
+            >
+                {error}
+            </Alert>
+
+            {(moveOn !== true) && (
+
+                <Stack spacing={4} alignItems="center" justifyContent="center" sx={{ minHeight: '100vh', p: 3 }}>
+                    <Paper elevation={3} sx = {{ p: 4, borderRadius: 4, width: '100%'}}>
+                    <Typography variant="h6" gutterBottom>
+                        Report status
+                    </Typography>
+                    <Divider sx={{ mb: 2 }} />
+                    <Typography variant="h6" gutterBottom>
                         <strong>Chosen Team:</strong> 
+                    </Typography>
+                    <Box sx = {{ mt: 1}}>
                         {(curGenerating === "CHOOSETEAM" || curGenerating === "" || curGenerating === "SETUP") && (
                             <span className="loading">Generating</span>
                         )}
-                        {chosenTeam.map((teamMember) => {
+                        {chosenTeam.map((teamMember, idx) => {
                             const goal = agentGoals.find((entry) => entry.agent === teamMember)?.goal;
                             return (
-                                <div>
-                                    {teamMember}
-                                    {goal && (
-                                        <span className="ml-2 text-gray-500">({goal})</span>
-                                    )}
-                                    {(curGenerating === teamMember) && (
-                                        <span className="loading">Generating</span>
-                                    )}
-                                </div>
+                                <Box key={idx}>
+                                    <Typography variant="body2">
+                                        {teamMember}
+                                        {goal && (
+                                            <span style={{ marginLeft: '0.5rem'}}>({goal})</span>
+                                        )}
+                                        {(curGenerating === teamMember) && (
+                                            <span className="loading">Generating</span>
+                                        )}
+                                    </Typography>
+                                </Box>
                             )
                         })}
                         
-                    </p>
-                    <p className="text-md font-medium text-gray-700">
-                        <strong>Guiding Questions:</strong> 
-                        {guidingQ.map((question, ind) => (
-                            <p key={ind}>{question}</p>
-                        ))}
-                        {(curGenerating === "GUIDINGQ") && (
-                            <span className="loading">Generating</span>
-                        )}
-                        </p>
-                    </div>
+                    </Box>
+                    <Box sx = {{ mt: 2}}>
+                        <Typography variant="body1" gutterBottom>
+                            <strong>Guiding Questions:</strong> 
+                                {(curGenerating === "GUIDINGQ") && (
+                                    <span className="loading">Generating</span>
+                                )}
+                                {guidingQ.map((question, ind) => (
+                                    <Typography key={ind}>{question}</Typography>
+                                ))}
+                        </Typography>
+                    </Box>
+                    </Paper>
 
-                    <div className="p-6 w-full max-w-2xl bg-white rounded-xl shadow-lg">
-                    <h2 className="text-xl font-bold text-gray-800 border-b pb-2">Chat Log</h2>
-                    <div className="bg-gray-100 p-4 rounded-lg shadow-inner space-y-2 max-h-96 overflow-y-auto">
-                        <p className="text-md font-medium text-gray-700">
-                            <strong>Cycle:</strong>
-                            {cycle}
-                        </p>
-                        {chatLog.map((entry, index) => (
-                        <div
-                            key={index}
-                            className={`p-3 rounded-lg max-w-[80%] ${
-                            entry.speaker === "l" 
-                                ? "bg-blue-500 text-white self-end ml-auto" 
-                                : "bg-gray-300 text-black self-start mr-auto"
-                            }`}
-                        >
-                            <strong className="block font-semibold">{entry.speaker}:</strong>
-                            <p>{entry.text}</p>
+                    <Paper elevation={3} sx = {{ p: 4, borderRadius: 4, width : '100%'}}>
+                        <Typography variant="h6" gutterBottom>
+                            Chat Log    
+                        </Typography>
+                        <Divider sx = {{ mb: 2}} />
+                        <Box sx={{ maxHeight: 400, overflowY: 'auto', p: 2, backgroundColor: '#f3f3f3', borderRadius: 2 }}>
+                            <Typography variant="body2" gutterBottom>
+                            <strong>Cycle:</strong> {cycle}
+                            </Typography>
+
+                            {chatLog.map((entry, index) => (
+                            <Box
+                                key={index}
+                                sx={{
+                                alignSelf: entry.speaker === "l" ? 'flex-end' : 'flex-start',
+                                backgroundColor: entry.speaker === "l" ? '#1976d2' : '#e0e0e0',
+                                color: entry.speaker === "l" ? '#fff' : '#000',
+                                p: 2,
+                                borderRadius: 2,
+                                maxWidth: '80%',
+                                mb: 1,
+                                }}
+                            >
+                                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                                {entry.speaker}:
+                                </Typography>
+                                <Typography variant="body2">{entry.text}</Typography>
+                            </Box>
+                            ))}
+
+                            {curGenerating === "STARTCONVO" && <span className="loading">Generating</span>}
+
                             
-                        </div>
-                        ))}
-                        {(curGenerating === "STARTCONVO") && (
-                            <span className="loading">Generating</span>
+                            <div ref={bottomRef}></div>
+                        </Box>
+                        {isLoading !== true && (
+                            <Button variant="contained" color="error" onClick={getNewReport} sx={{ mt: 2 }}>
+                                View final report
+                            </Button>
                         )}
-                        {(isLoading !== true) &&
-                            <button type="button" className="btn btn-danger" onClick={() => getNewReport()}>View final report</button>
-                        }  
-                        <div ref={bottomRef}></div>
-                    </div>
-                    </div>
-                </div>
-                )}
-        {(report != null && moveOn === true) && 
-                (
-                <div className="flex flex-col space-y-2">
-                <div>
-                    <a 
-                    href= {report.output}
-                    className="text-blue-500 underline block"
-                    target="_blank"
-                    >
-                        View report
-                    </a>
-                </div>
-                <div>
-                    <a 
-                    href= {report.chat_log}
-                    className="text-blue-500 underline block"
-                    target="_blank"
-                    >
+                    </Paper>
+                </Stack>
+            )}
+            {report != null && moveOn === true && (
+                <Stack spacing={2} alignItems="flex-start">
+                    <Link href={report.output} target="_blank" underline="hover" color="primary">
+                    View report
+                    </Link>
+                    <Link href={report.chat_log} target="_blank" underline="hover" color="primary">
                     View chatlog
-                    </a>
-                </div>
-                <button disabled={deleteDisabled} type="button" className="btn btn-danger" onClick={() => deleteReport(name)}>Discard report</button>
-                <button disabled={savedToLead} type="button" className="btn btn-danger" onClick={() => saveReportMemory(name)}>Save report in lead memory</button>
-                
-                </div>
-                )}
-        </div>
+                    </Link>
+                    <Button variant="contained" color="error" onClick={() => deleteReport(name)} disabled={deleteDisabled}>
+                    Discard report
+                    </Button>
+                    <Button variant="contained" color="success" onClick={() => saveReportMemory(name)} disabled={savedToLead}>
+                    Save report in lead memory
+                    </Button>
+                </Stack>
+            )}
+        </Container>
     );
     //const [selectedFile, setSelectedFile] = useState<File | null>(null);
     

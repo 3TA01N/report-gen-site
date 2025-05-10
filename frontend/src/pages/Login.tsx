@@ -1,7 +1,7 @@
 import {useState} from "react"
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
-import { TextField, Alert, Button,Paper, Box, Typography, Container, Link } from '@mui/material';
+import { TextField, Alert, Button,Paper, Box, Typography, Container, Link, CircularProgress } from '@mui/material';
 
 
 function Login () {
@@ -119,7 +119,11 @@ function Login () {
                     >
                         Sign In
                     </Button>
-
+                    {isLoading && (
+                        <Box sx={{ mt: 3 }}>
+                            <CircularProgress />
+                        </Box>
+                    )}
                     <Link
                         component="button"
                         variant="body2"

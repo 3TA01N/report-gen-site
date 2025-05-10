@@ -103,7 +103,7 @@ function ReportForm({name, task, onSelectFileChange, onRemoveFile, onSelectAgent
                     variant="outlined"
                     value={expectations}
                     onChange={onExpectationsChange}
-                    required
+                    
                     fullWidth
                 />
                 <TextField
@@ -111,7 +111,7 @@ function ReportForm({name, task, onSelectFileChange, onRemoveFile, onSelectAgent
                     variant="outlined"
                     value={reportGuidelines}
                     onChange={onReportGuidelinesChange}
-                    required
+                    
                     fullWidth
                 />
             
@@ -160,7 +160,7 @@ function ReportForm({name, task, onSelectFileChange, onRemoveFile, onSelectAgent
                     variant="outlined"
                     value={cycles}
                     onChange={onCyclesChange}
-                    required
+                    
                     type="number"
                     fullWidth
                 />
@@ -170,7 +170,7 @@ function ReportForm({name, task, onSelectFileChange, onRemoveFile, onSelectAgent
                     variant="outlined"
                     value={temperature}
                     onChange={onTemperatureChange}
-                    required
+                    
                     type="number"
                     fullWidth
                 />

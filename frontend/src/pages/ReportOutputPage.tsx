@@ -8,7 +8,6 @@ import {
     Box,
     Stack, 
     Paper,
-    Link,
     Button,
     Divider,
     Container,
@@ -25,8 +24,6 @@ function ReportOutputPage () {
     const [chatLog, setChatLog] = useState<{ speaker: string; text: string }[]>([]);
     const [agentGoals, setAgentGoals] = useState<{ agent: string; goal: string }[]>([]);
     const [cycle, setCycle] = useState("0");
-    const [deleteDisabled, setDeleteDisabled] = useState(false);
-    const [savedToLead, setSavedToLead] = useState<boolean>(false)
     const location = useLocation();
     const subData = location.state || {};
     const [name, setName] = useState(subData.name || '')
@@ -75,35 +72,7 @@ function ReportOutputPage () {
         }
     };
     
-    const deleteReport = async(id:any) => {
-        try {
-            await api.delete(`/reports/${id}`)
-            setDeleteDisabled(true)
-            console.log("navigating")
-            navigate("/", 
-                { state: { 
-                    name:name,
-                    task: task,
-                    description: description,
-                    expectation: expectations,
-                    model: model,
-                    context: context,
-                    selectedInDBFiles: selectedInDBFiles,
-                    selectedAgents: selectedAgents,
-                    cycles: cycles,
-                    reportGuidelines: reportGuidelines,
-                    method: method,
-                    temp: temp,
-                    engine: engine,
-                    lead: lead,
-                } 
-            });
-        }
-        catch (error: any) {
-            console.log("errror deleting report")
-        }
-        
-    }
+    
     const getNewReport = async () => {
         
         //report should have been created in backend after done, so now fetch it
@@ -117,18 +86,12 @@ function ReportOutputPage () {
         }
         setMoveOn(true)
     }
-    const saveReportMemory = async (reportId:any) => {
-        setLoadStatus(true)
-        try {
-            await api.post(`save_report_memory/${reportId}/`)
-            setSavedToLead(true)
-            setLoadStatus(false)
+    useEffect(() => {
+        if (report != null && moveOn === true) {
+            navigate(`/reports/${name}`);
         }
-        catch (error: any) {
-            console.log('Error fetching agents', error.response)
-            setLoadStatus(false)
-        }
-    }
+    }, [report, moveOn, name, navigate]);
+    
     if (!subData) return <p>No formdata</p>;
     useEffect(() => {    
         checkLoggedInUser()   
@@ -370,14 +333,15 @@ function ReportOutputPage () {
     //if not want to be saved, then delete the obj
     return (
         <Container maxWidth="md" sx = {{py:4}}>
-
-            <Alert
-                severity="error"
-                onClose={() => setError(null)}
-                sx={{ mb: 2}}
-            >
-                {error}
-            </Alert>
+            {error && (
+                <Alert
+                    severity="error"
+                    onClose={() => setError(null)}
+                    sx={{ mb: 2}}
+                >
+                    {error}
+                </Alert>
+            )}
 
             {(moveOn !== true) && (
 
@@ -430,7 +394,7 @@ function ReportOutputPage () {
                             Chat Log    
                         </Typography>
                         <Divider sx = {{ mb: 2}} />
-                        <Box sx={{ maxHeight: 400, overflowY: 'auto', p: 2, backgroundColor: '#f3f3f3', borderRadius: 2 }}>
+                        <Box sx={{ maxHeight: 400, overflowY: 'auto', p: 2, borderRadius: 2 }}>
                             <Typography variant="body2" gutterBottom>
                             <strong>Cycle:</strong> {cycle}
                             </Typography>
@@ -440,8 +404,8 @@ function ReportOutputPage () {
                                 key={index}
                                 sx={{
                                 alignSelf: entry.speaker === "l" ? 'flex-end' : 'flex-start',
-                                backgroundColor: entry.speaker === "l" ? '#1976d2' : '#e0e0e0',
-                                color: entry.speaker === "l" ? '#fff' : '#000',
+                                backgroundColor: entry.speaker === "l" ? '#1976d2' : '#4b494b',
+                                color: entry.speaker === "l" ? '#000' : '#fff',
                                 p: 2,
                                 borderRadius: 2,
                                 maxWidth: '80%',
@@ -468,22 +432,7 @@ function ReportOutputPage () {
                     </Paper>
                 </Stack>
             )}
-            {report != null && moveOn === true && (
-                <Stack spacing={2} alignItems="flex-start">
-                    <Link href={report.output} target="_blank" underline="hover" color="primary">
-                    View report
-                    </Link>
-                    <Link href={report.chat_log} target="_blank" underline="hover" color="primary">
-                    View chatlog
-                    </Link>
-                    <Button variant="contained" color="error" onClick={() => deleteReport(name)} disabled={deleteDisabled}>
-                    Discard report
-                    </Button>
-                    <Button variant="contained" color="success" onClick={() => saveReportMemory(name)} disabled={savedToLead}>
-                    Save report in lead memory
-                    </Button>
-                </Stack>
-            )}
+
         </Container>
     );
     //const [selectedFile, setSelectedFile] = useState<File | null>(null);

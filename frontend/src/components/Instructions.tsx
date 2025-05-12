@@ -5,6 +5,7 @@ import { Modal, Box, Typography, IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
 
+
 interface InstructionsProps {
     startingShow: boolean; 
 }
@@ -22,6 +23,12 @@ const Instructions: React.FC<InstructionsProps> = ({ startingShow }) => {
         <Typography
           variant="body2"
           sx={{
+            animation: 'pulse 2s infinite',
+            '@keyframes pulse': {
+              '0%': { opacity: 1 },
+              '50%': { opacity: 0.5 },
+              '100%': { opacity: 1 },
+            },
             textDecoration: 'underline',
             color: 'primary.main',
             cursor: 'pointer',
@@ -58,7 +65,7 @@ const Instructions: React.FC<InstructionsProps> = ({ startingShow }) => {
 
             <Box mt={2}>
               <Typography variant="h5" gutterBottom>
-                Welcome to Agent based Report Generation
+                Welcome to Agent based Report Generation. For any confusions about individual fields, hover over the question mark icon to the right of each field.
               </Typography>
               <Typography paragraph>
                 This site provides an interface for generating reports through combining AI agents and Retrieval Augmented Generation.

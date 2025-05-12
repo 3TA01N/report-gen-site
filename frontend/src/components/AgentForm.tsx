@@ -48,26 +48,26 @@ function AgentForm({name, role, expertise, uploadedFiles, onRemoveFile, onNameCh
                     </Typography>
                   </Box>
                 }>
-                        <IconButton
-                        size="small"
-                        sx={{
-                            //position: 'absolute',
-                            top: '50%',
-                            right: 8,
-                            marginTop: '17.5px',
-                            transform: 'translateY(-50%)',
-                            backgroundColor: 'transparent',
-                            color: 'gray',
-                            '&:hover': {
-                            backgroundColor: 'transparent',
-                            color: 'black',
-                            },
-                        }}
-                        disableRipple
-                        >
-                        <HelpOutlineIcon />
-                        </IconButton>
-                    </Tooltip>
+                    <IconButton
+                    size="small"
+                    sx={{
+                        //position: 'absolute',
+                        top: '50%',
+                        right: 8,
+                        marginTop: '17.5px',
+                        transform: 'translateY(-50%)',
+                        backgroundColor: 'transparent',
+                        color: 'gray',
+                        '&:hover': {
+                        backgroundColor: 'transparent',
+                        color: 'black',
+                        },
+                    }}
+                    disableRipple
+                    >
+                    <HelpOutlineIcon />
+                    </IconButton>
+                </Tooltip>
             </Box>
             <Box component="form" onSubmit={onSubmit} display="flex" flexDirection="column" gap={3}>
                 <TextField
@@ -108,7 +108,7 @@ function AgentForm({name, role, expertise, uploadedFiles, onRemoveFile, onNameCh
                         <HelpOutlineIcon />
                         </IconButton>
                     </Tooltip>
-                    </Box>
+                </Box>
                 <Box position="relative" width="100%">
                     <TextField
                         label="Expertise"

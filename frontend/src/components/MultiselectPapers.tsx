@@ -48,9 +48,7 @@ const MultiselectPapers: React.FC<MultiSelectPapersProps> =({passNamesToParent})
     return (
         
         <Box>
-        <Typography variant="body1" sx={{ mb: 1 }}>
-            Choose from existing papers:
-        </Typography>
+        
         <Autocomplete
             multiple
             options={papersOptions || []}

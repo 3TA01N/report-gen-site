@@ -49,9 +49,7 @@ const MultiselectPapers: React.FC<MultiSelectAgentsProps> =({passNamesToParent})
     return (
 
         <Box>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-                Choose Potential Agents(or leave empty to allow choosing all)
-            </Typography>
+            
             <Autocomplete
                 multiple
                 options={agentOptions || []}

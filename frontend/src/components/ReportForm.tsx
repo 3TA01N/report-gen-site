@@ -10,6 +10,7 @@ import {
     FormControl,
     Select,
     MenuItem,
+    Tooltip,
     IconButton,
     TextField,
     Button,
@@ -19,6 +20,7 @@ import {
     InputLabel,
   } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 
 interface ReportFormProps {
@@ -81,44 +83,199 @@ function ReportForm({name, task, onSelectFileChange, onRemoveFile, onSelectAgent
                     required
                     fullWidth
                 />
-            
-                <TextField
-                    label="Description"
-                    variant="outlined"
-                    value={description}
-                    onChange={onDescriptionChange}
-                    required
-                    fullWidth
-                />
-                <TextField
-                    label="Task"
-                    variant="outlined"
-                    value={task}
-                    onChange={onTaskChange}
-                    required
-                    fullWidth
-                />
-                <TextField
-                    label="Expectations"
-                    variant="outlined"
-                    value={expectations}
-                    onChange={onExpectationsChange}
-                    
-                    fullWidth
-                />
-                <TextField
-                    label="Report Guidelines"
-                    variant="outlined"
-                    value={reportGuidelines}
-                    onChange={onReportGuidelinesChange}
-                    
-                    fullWidth
-                />
-            
+                <Box position="relative" width="100%">
+                    <TextField
+                        label="Description"
+                        variant="outlined"
+                        value={description}
+                        onChange={onDescriptionChange}
+                        required
+                        fullWidth
+                    />
+                    <Tooltip title="Description for this report(only for your convenience, not passed in to the report generation convo)">
+                        <IconButton
+                        size="small"
+                        sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            right: 8,
+                            transform: 'translateY(-50%)',
+                            backgroundColor: 'transparent',
+                            color: 'gray',
+                            '&:hover': {
+                            backgroundColor: 'transparent',
+                            color: 'black',
+                            },
+                        }}
+                        disableRipple
+                        >
+                        <HelpOutlineIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+                <Box position="relative" width="100%">
+                    <TextField
+                        label="Task"
+                        variant="outlined"
+                        value={task}
+                        onChange={onTaskChange}
+                        required
+                        fullWidth
+                    />
+                    <Tooltip title="The main task that will be answered in the report. Be as specific as possible.">
+                        <IconButton
+                        size="small"
+                        sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            right: 8,
+                            transform: 'translateY(-50%)',
+                            backgroundColor: 'transparent',
+                            color: 'gray',
+                            '&:hover': {
+                            backgroundColor: 'transparent',
+                            color: 'black',
+                            },
+                        }}
+                        disableRipple
+                        >
+                        <HelpOutlineIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
 
-                <MultiselectAgents passNamesToParent={onSelectAgentChange}/>
-                <MultiselectPapers passNamesToParent={onSelectFileChange}/>
-            
+                <Box position="relative" width="100%">
+                    <TextField
+                        label="Expectations"
+                        variant="outlined"
+                        value={expectations}
+                        onChange={onExpectationsChange}
+                        
+                        fullWidth
+                    />
+                    <Tooltip title="Expectations for the final report. Ie, 'Must discuss BLANK', or 'Must mention BLANK'">
+                        <IconButton
+                        size="small"
+                        sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            right: 8,
+                            transform: 'translateY(-50%)',
+                            backgroundColor: 'transparent',
+                            color: 'gray',
+                            '&:hover': {
+                            backgroundColor: 'transparent',
+                            color: 'black',
+                            },
+                        }}
+                        disableRipple
+                        >
+                        <HelpOutlineIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+                
+                <Box position="relative" width="100%">
+                    <TextField
+                        label="Report Guidelines"
+                        variant="outlined"
+                        value={reportGuidelines}
+                        onChange={onReportGuidelinesChange}
+                        
+                        fullWidth
+                    />
+                    <Tooltip title="Guidelines for the report. For example, 'Report must be titled BLANK', or 'Report must be BLANK words long'.">
+                        <IconButton
+                        size="small"
+                        sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            right: 8,
+                            transform: 'translateY(-50%)',
+                            backgroundColor: 'transparent',
+                            color: 'gray',
+                            '&:hover': {
+                            backgroundColor: 'transparent',
+                            color: 'black',
+                            },
+                        }}
+                        disableRipple
+                        >
+                        <HelpOutlineIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+                <Box>
+                <Box position="relative" width="100%" display="flex" gap={1}>
+                    <Typography variant="body1" sx={{ mb: 1 }}>
+                        Choose Potential Agents(or leave empty to allow choosing all)
+                    </Typography>
+                    <Tooltip title={
+                        <Box>
+                        <Typography variant="subtitle2" gutterBottom>
+                            Choose the potential agents you'd want answering this question(if confused about agents, go to agents page in top navbar). The lead will take into consideration each of the agent's expertises and the task above when choosing a team to discuss the task. Not all agents selected here are guaranteed to be part of the team.
+                        </Typography>
+                    </Box>
+                    }>
+                        <IconButton
+                        size="small"
+                        sx={{
+                            //position: 'absolute',
+                            top: '50%',
+                            right: 8,
+                            marginTop: '13px',
+                            transform: 'translateY(-50%)',
+                            backgroundColor: 'transparent',
+                            color: 'gray',
+                            '&:hover': {
+                            backgroundColor: 'transparent',
+                            color: 'black',
+                            },
+                        }}
+                        disableRipple
+                        >
+                        <HelpOutlineIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+                    <MultiselectAgents passNamesToParent={onSelectAgentChange}/>
+                </Box>
+                <Box>
+                    <Box position="relative" width="100%" display="flex" gap={1}>
+                        <Typography variant="body1" sx={{ mb: 1 }}>
+                            Choose from existing papers:
+                        </Typography>
+                        <Tooltip title={
+                            <Box>
+                            <Typography variant="subtitle2" gutterBottom>
+                                Choose from existing papers(ie papers that have been uploaded to the site from previous reports or agents) to be passed into the conversation as relevant context. Ie, domain specific papers to provide helpful information, or papers that you'd want to center your discussion around
+                            </Typography>
+                        </Box>
+                        }>
+                            <IconButton
+                            size="small"
+                            sx={{
+                                //position: 'absolute',
+                                top: '50%',
+                                right: 8,
+                                marginTop: '13px',
+                                transform: 'translateY(-50%)',
+                                backgroundColor: 'transparent',
+                                color: 'gray',
+                                '&:hover': {
+                                backgroundColor: 'transparent',
+                                color: 'black',
+                                },
+                            }}
+                            disableRipple
+                            >
+                            <HelpOutlineIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+                    <MultiselectPapers passNamesToParent={onSelectFileChange}/>
+                </Box>
+                
                 <Box>
                     <InputLabel htmlFor="formFile" sx={{ mb: 1 }}>
                         Or Upload new paper(s) as PDF
@@ -223,6 +380,26 @@ function ReportForm({name, task, onSelectFileChange, onRemoveFile, onSelectAgent
                         </MenuItem>
                     ))}
                     </Select>
+                    <Tooltip title="Choose a lead to guide this report(if confused, got to Leads page in top navbar). The lead chosen for this report will optionally use data from any reports it has previously generated, and users will be given the option to save this report within the lead's knowledge base to be used in future reports as well. If you don't want reports to be generated with previous reports info in mind, don't worry too much about which lead you choose.">
+                        <IconButton
+                        size="small"
+                        sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            right: 20,
+                            transform: 'translateY(-50%)',
+                            backgroundColor: 'transparent',
+                            color: 'gray',
+                            '&:hover': {
+                            backgroundColor: 'transparent',
+                            color: 'black',
+                            },
+                        }}
+                        disableRipple
+                        >
+                        <HelpOutlineIcon />
+                        </IconButton>
+                    </Tooltip>
                 </FormControl>
 
             <Button variant="contained" color="primary" type="submit">

@@ -91,7 +91,7 @@ function Leads () {
                         py: 4,
                     }}
                 >
-                    <Typography variant="h5" color="primary" gutterBottom>Create Lead</Typography>
+                    
                     <LeadForm 
                         name={name}
                         description={description}

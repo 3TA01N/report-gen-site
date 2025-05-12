@@ -12,7 +12,7 @@ function Logout() {
                     },withCredentials: true
                 },);
 
-                console.log('logout', data)
+                //console.log('logout', data)
                 localStorage.clear();
                 axios.defaults.headers.common['Authorization'] = null;
                 window.location.href = '/login'

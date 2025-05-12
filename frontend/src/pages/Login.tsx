@@ -44,9 +44,9 @@ function Login () {
           setIsLoading(true);
           setError(null);
           try{
-                console.log(formData)
+                //console.log(formData)
                 const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/login/`, formData)
-                console.log(`${import.meta.env.VITE_BACKEND_URL}/api/login/`)
+                //console.log(`${import.meta.env.VITE_BACKEND_URL}/api/login/`)
                 console.log("Success!", response.data)
                 localStorage.setItem("accessToken", response.data.tokens.access);
                 localStorage.setItem("refreshToken", response.data.tokens.refresh)
@@ -90,7 +90,7 @@ function Login () {
                     </Alert>
                 )}
                 <Typography variant="h5">Sign In</Typography>
-                <Box component="form" sx={{ mt: 2 }}>
+                <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
                     <TextField
                         label="Email Address"
                         name="email"
@@ -111,6 +111,7 @@ function Login () {
                         onChange={handleChange}
                     />
                     <Button
+                        type="submit"
                         variant="contained"
                         fullWidth
                         disabled={isLoading}
@@ -124,22 +125,23 @@ function Login () {
                             <CircularProgress />
                         </Box>
                     )}
-                    <Link
-                        component="button"
-                        variant="body2"
-                        onClick={handleNav}
-                        sx={{
-                            display: 'block',
-                            textAlign: 'center',
-                            color: 'primary.main',
-                            textDecoration: 'none',
-                            fontSize: '14px',
-                            marginTop: 2,
-                        }}
-                    >
-                        Don’t have an account? Register
-                    </Link>
+                    
                 </Box>
+                <Link
+                    component="button"
+                    variant="body2"
+                    onClick={handleNav}
+                    sx={{
+                        display: 'block',
+                        textAlign: 'center',
+                        color: 'primary.main',
+                        textDecoration: 'none',
+                        fontSize: '14px',
+                        marginTop: 2,
+                    }}
+                >
+                    Don’t have an account? Register
+                </Link>
             </Paper>
         </Container>
     )

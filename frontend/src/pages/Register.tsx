@@ -41,8 +41,8 @@ function Register () {
         }
     }
     useEffect(() => {
-        console.log("Full URL:", window.location.href);
-        console.log("Query params:", window.location.search);
+        //console.log("Full URL:", window.location.href);
+        //console.log("Query params:", window.location.search);
     }, []);
     
     useEffect(() => {
@@ -66,12 +66,12 @@ function Register () {
             data: formData
         })
         .then(response => {
-            console.log('New user registered:', response.data) 
+            //console.log('New user registered:', response.data) 
 
             const loginAfterRegister = async () => {
                 try{
                     const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/login/`, loginData)
-                    console.log("Success login!", response.data)
+                    //console.log("Success login!", response.data)
                     localStorage.setItem("accessToken", response.data.tokens.access);
                     localStorage.setItem("refreshToken", response.data.tokens.refresh)
                     localStorage.setItem("showInstr", "true");

@@ -28,7 +28,7 @@ function Papers () {
             try {
                 const response = await api.get('/papers/')
                 setPapers(response.data)
-                console.log(response.data)
+                //console.log(response.data)
             }
             catch (error:any) {
                 console.log('Error fetching papers', error.response)

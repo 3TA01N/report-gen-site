@@ -20,7 +20,7 @@ function LeadForm({name, description, onNameChange, onDescriptionChange, onSubmi
     return (
         <Box>
             <Box position="relative" width="100%" display="flex" gap={1}>
-                <Typography variant="h5" color="primary" gutterBottom sx={{ paddingBottom: 0 }}>Create agent</Typography>
+                <Typography variant="h5" color="primary" gutterBottom sx={{ paddingBottom: 0 }}>Create lead</Typography>
                 <Tooltip title={
                     <Box>
                     <Typography variant="subtitle2" gutterBottom>

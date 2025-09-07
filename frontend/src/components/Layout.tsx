@@ -66,7 +66,7 @@ export default function Layout({ children, ...props }: Props) {
             }
         };
         checkLoggedInUser()
-        console.log(username)
+        //console.log(username)
     }, [isLoggedIn])
 
     if (isLoggedIn === null) {

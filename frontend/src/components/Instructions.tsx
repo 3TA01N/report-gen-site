@@ -73,7 +73,7 @@ const Instructions: React.FC<InstructionsProps> = ({ startingShow }) => {
 
               <Typography variant="h6" gutterBottom>Step 1: Getting Started</Typography>
               <Typography paragraph>
-                Begin by navigating to "Leads" in the navbar above, and creating a lead. Leads choose teams, organize meetings, and keep track of previous meeting data.
+                To start, a default lead and agent have been created so you can get right into conversations. If you want to create a custom lead, begin by navigating to "Leads" in the navbar above, and creating a lead. Leads choose teams, organize meetings, and keep track of previous meeting data.
               </Typography>
 
               <Typography variant="h6" gutterBottom>Step 2: Building a team of potential agents</Typography>

@@ -103,6 +103,8 @@ class userRegistrationAPIView(GenericAPIView):
                           "access": str(token.access_token)
                           }
         #log_memory_usage("Before regis resp")
+
+        #create default agent, and default lead
         return Response(data, status=status.HTTP_201_CREATED)
 class AgentView(viewsets.ModelViewSet):
     serializer_class = AgentSerializer
@@ -170,6 +172,7 @@ class AgentView(viewsets.ModelViewSet):
             agent.delete()
             #log_memory_usage("Before detele agent response")
             return Response({"message": "Agent successfully deleted"}, status = status.HTTP_204_NO_CONTENT)
+    
     #@profile
     def create(self, request, *args, **kwargs):
         with transaction.atomic():

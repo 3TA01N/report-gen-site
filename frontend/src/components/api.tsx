@@ -11,7 +11,6 @@ async function refreshToken() {
     if (!refresh) throw new Error("No refresh token available");
 
     const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/token/refresh/`, { refresh });
-    console.log("Token refreshed");
 
     const newAccessToken = response.data.access;
     const newRefreshToken = response.data.refresh;

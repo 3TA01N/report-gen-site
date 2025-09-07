@@ -2,6 +2,7 @@ import {useState, useEffect } from "react"
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import { TextField, Alert, Button,Paper, CircularProgress, Box, Typography, Container, Link } from '@mui/material';
+import api from '../components/api'
 
 
 function Register () {
@@ -52,52 +53,52 @@ function Register () {
         })
     },[formData]);
 
-    const handleSubmit = async (e:any) => {
+    const handleSubmit = async (e: any) => {
         e.preventDefault();
-        if (isLoading) {
-            return 
-        }
-        setIsLoading(true)
+        if (isLoading) return;
+
+        setIsLoading(true);
         setError(null);
-        console.log("starting register response")
-        axios({
-            url: `${import.meta.env.VITE_BACKEND_URL}/api/register/`,
-            method: "POST",
-            data: formData
-        })
-        .then(response => {
-            //console.log('New user registered:', response.data) 
 
-            const loginAfterRegister = async () => {
-                try{
-                    const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/login/`, loginData)
-                    //console.log("Success login!", response.data)
-                    localStorage.setItem("accessToken", response.data.tokens.access);
-                    localStorage.setItem("refreshToken", response.data.tokens.refresh)
-                    localStorage.setItem("showInstr", "true");
-                    navigate('/');
+        try {
+            //register
+            console.log("starting register response");
+            await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/register/`, formData);
+
+            //login
+            const res = await api.post(`/login/`, loginData);
+            localStorage.setItem("accessToken", res.data.tokens.access);
+            localStorage.setItem("refreshToken", res.data.tokens.refresh);
+            localStorage.setItem("showInstr", "true");
+            //Create default agent and lead
+            await Promise.all([
+                (async () => {
+                    const fd = new FormData();
+                    fd.append("name", "DefaultAgent");
+                    fd.append("role", "You are a jack of all trades.");
+                    fd.append("expertise", "Expertise in every subject");
+                    const res1 = await api.post("/agents/", fd);
+                    console.log("Default agent created:", res1.data);
+
+                    const lead = {
+                        name: "DefaultLead",
+                        description: "A default lead for users to start running conversations with",
+                    };
+                    const res2 = await api.post("/leads/", lead);
+                    console.log("Default lead created:", res2.data);
+
+                    navigate("/");
                     window.location.reload();
-                    
-                }
-                catch(error){
-                console.log("error catching")
-                handleAxiosError(error)
-                console.error(error)
-                }
-            }
-            loginAfterRegister();
-        })
-        .catch((Error) => {
-            console.log("error catching")
-            handleAxiosError(Error)
-            console.error(Error)
-        })
-        
-        setIsLoading(false)
-        
-        
-
-    }
+                })(),
+            ]);
+            
+        } catch (err) {
+            console.error("Error during registration flow:", err);
+            handleAxiosError(err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
     return (
         <Container component="main" maxWidth="xs" sx={{paddingTop: 2}}>
             <Paper
@@ -160,6 +161,7 @@ function Register () {
                     />
                     <Button
                         variant="contained"
+                        type="submit"
                         fullWidth
                         sx={{ mt: 2 }}
                         disabled={isLoading}

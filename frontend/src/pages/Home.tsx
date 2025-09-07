@@ -101,10 +101,12 @@ function Home () {
 
             <h3>Generate a new report</h3>
             <ReportForm
+                
                 onRemoveFile={handleRemoveFile}
                 name = {name}
                 onSelectFileChange={onSelectFileChange}
                 onSelectAgentChange={onSelectAgentChange}
+                onErrorChange={(newError) => setError(newError)}
                 task = {task}
                 expectations = {expectations}
                 uploadedFiles = {context}
@@ -116,6 +118,7 @@ function Home () {
                 engine = {engine}
                 model = {model}
                 lead = {lead}
+                error = {error}
                 onNameChange={(e:any) => setName(e.target.value)}
                 onTaskChange={(e:any) => setTask(e.target.value)}
                 onExpectationsChange={(e:any) => setExpectations(e.target.value)}

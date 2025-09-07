@@ -83,7 +83,7 @@ function Home () {
     }
     
     return (
-        <div>
+        <div style={{ paddingLeft: '24px', paddingRight: '24px' }}>
             {error && (
                 <div className="alert alert-danger alert-dismissible fade show" role="alert">
                 {error}

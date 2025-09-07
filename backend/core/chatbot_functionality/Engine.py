@@ -17,11 +17,12 @@ class openai_engine:
     def to_string(self):
         print("openai", self.model)
     #chat completion: takes in the chatlog and answeres the query given format
-    def chat_complete(self, chatlog):
+    def chat_complete(self, chatlog, temperature):
         
         completion = self.client.chat.completions.create(
             model=self.model,
             messages=chatlog,
+            temperature=temperature,
         )
         #print(completion)
         input_tokens = completion.usage.completion_tokens

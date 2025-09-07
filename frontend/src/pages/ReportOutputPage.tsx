@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom"
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../components/api'
+
 import {
     Alert,
     Box,
@@ -12,6 +13,7 @@ import {
     Divider,
     Container,
     Typography,
+    CircularProgress,
   } from '@mui/material';
 
 function ReportOutputPage () {
@@ -356,19 +358,25 @@ function ReportOutputPage () {
                     </Typography>
                     <Box sx = {{ mt: 1}}>
                         {(curGenerating === "CHOOSETEAM" || curGenerating === "" || curGenerating === "SETUP") && (
-                            <span className="loading">Generating</span>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <span style={{ color: 'purple' }}>Generating</span>
+                                <CircularProgress size={16} />
+                            </Box>
                         )}
                         {chosenTeam.map((teamMember, idx) => {
                             const goal = agentGoals.find((entry) => entry.agent === teamMember)?.goal;
                             return (
                                 <Box key={idx}>
                                     <Typography variant="body2">
-                                        {teamMember}
+                                        {<strong>teamMember: </strong>}
                                         {goal && (
                                             <span style={{ marginLeft: '0.5rem'}}>({goal})</span>
                                         )}
                                         {(curGenerating === teamMember) && (
-                                            <span className="loading">Generating</span>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <span style={{ color: 'purple' }}>Generating</span>
+                                                <CircularProgress size={16} />
+                                            </Box>
                                         )}
                                     </Typography>
                                 </Box>
@@ -379,12 +387,16 @@ function ReportOutputPage () {
                     <Box sx = {{ mt: 2}}>
                         <Typography variant="body1" gutterBottom>
                             <strong>Guiding Questions:</strong> 
-                                {(curGenerating === "GUIDINGQ") && (
-                                    <span className="loading">Generating</span>
-                                )}
+                                
                                 {guidingQ.map((question, ind) => (
                                     <Typography key={ind}>{question}</Typography>
                                 ))}
+                                {(curGenerating === "GUIDINGQ") && (
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <span style={{ color: 'purple' }}>Generating</span>
+                                        <CircularProgress size={16} />
+                                    </Box>
+                                )}
                         </Typography>
                     </Box>
                     </Paper>
@@ -419,7 +431,13 @@ function ReportOutputPage () {
                             </Box>
                             ))}
 
-                            {curGenerating === "STARTCONVO" && <span className="loading">Generating</span>}
+                            {curGenerating === "STARTCONVO" && 
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <span style={{ color: 'purple' }}>Generating</span>
+                                    <CircularProgress size={16} />
+                                </Box>
+                                
+                            }
 
                             
                             <div ref={bottomRef}></div>

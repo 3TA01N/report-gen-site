@@ -24,7 +24,7 @@ class Conversation:
     """def chat_log_to_string(self):
         return "\n".join(json.dumps(item, indent=1) if isinstance(item, dict) else str(item) for item in self.chat_log)
     """
-    def convo_prompt(self, prompt, agent_name, draw_from_knowledge):
+    def convo_prompt(self, prompt, agent_name, draw_from_knowledge, temperature):
         #Prompt should be something like , "lead, kick off conversation"
         #Given an agent_name, continue the conversation, and format response into the log
         if (agent_name in self.team):
@@ -52,7 +52,7 @@ class Conversation:
             agent_prompt = {"role": "user", "content": agent_context}
             self.chat_log.append(agent_prompt)
             
-            response = self.engine.chat_complete(chatlog = self.chat_log)
+            response = self.engine.chat_complete(chatlog = self.chat_log, temperature = temperature)
             response_text = response['output']
             #add response to log
             format_response = {"role": "assistant", "content": response_text}

@@ -21,7 +21,7 @@ const NavBar: React.FC<NavbarProps> = ({ handleLogout }) => {
 
   return (
     <AppBar position="static" color="default" elevation={1}>
-      <Toolbar sx={{ alignItems: 'stretch', minHeight: 64 }}>
+      <Toolbar disableGutters sx={{ alignItems: 'stretch', minHeight: 64, px: 0}}>
         <Box sx={{ display: 'flex', alignItems: 'stretch', flexGrow: 1 }}>
           <Typography variant="h6" component="div">
             <NavBarButton color="inherit" href="/">Home</NavBarButton>
@@ -44,9 +44,21 @@ const NavBar: React.FC<NavbarProps> = ({ handleLogout }) => {
             </Menu>
           </Box>
         </Box>
-        <Button color="error" variant="contained" onClick={handleLogout}>
-          Logout
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
+          <Button
+            variant="contained"
+            onClick={handleLogout}
+            sx={{
+              borderRadius: 0,
+              boxShadow: 'none',
+              '&:hover': { bgcolor: '#e0e0e0' },
+              minWidth: 80,
+              height: '100%',
+            }}
+          >
+            Logout
+          </Button>
+        </Box>
       </Toolbar>
     </AppBar>
   );

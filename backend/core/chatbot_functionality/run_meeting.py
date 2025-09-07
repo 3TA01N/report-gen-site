@@ -438,10 +438,10 @@ def run_meeting(params):
                     #Include expertise, and stuff
                     agent_prompt =  f"""{agent_key}, continue the conversation. 
                         Remember that you can and should (politely) disagree with other team members if you have a different perspective.
-                        Alternatively, if you do not have anything new or relevant to add, you may say "pass".
+                        Alternatively, if you do not have anything new or relevant to add, you may say "pass"(however, refrain from doing so unless absolutely neccesary).
                         {critique}"""
                     
-                    response = conversation.convo_prompt(agent_name=agent_key, prompt=agent_prompt, draw_from_knowledge=True)
+                    response = conversation.convo_prompt(agent_name=agent_key, prompt=agent_prompt, draw_from_knowledge=True, temperature=temperature)
                     time.sleep(0.1)
                     yield json.dumps(["RESPONSE", agent_key, response]) + '\n'
                 
@@ -455,13 +455,13 @@ def run_meeting(params):
             Your critique should be formatted clearly, with each agent addressed individually by name.
             """
                 time.sleep(0.1)
-                critic_response = conversation.convo_prompt(agent_name="Analyst", prompt=critic_prompt, draw_from_knowledge=False)
+                critic_response = conversation.convo_prompt(agent_name="Analyst", prompt=critic_prompt, draw_from_knowledge=False, temperature=temperature)
                 time.sleep(0.1)
                 yield json.dumps(["RESPONSE", "critic", critic_response]) + '\n'
                 post_round_lead_prompt = f"""This concludes round {i+1} of {cycles} rounds of discussion. Lead, synthesize the points raised by each team member, make decisions regarding the agenda based on team member input, and ask follow-up questions to gather more information and feedback about how to better address the agenda"""
                 time.sleep(0.1)
                 yield json.dumps(["CONV_PROGRESS", "lead synthesizing points"]) + '\n'
-                lead_response = conversation.convo_prompt(agent_name="ProjectLead",prompt=post_round_lead_prompt, draw_from_knowledge=False)
+                lead_response = conversation.convo_prompt(agent_name="ProjectLead",prompt=post_round_lead_prompt, draw_from_knowledge=False, temperature=temperature)
                 time.sleep(0.1)
                 yield json.dumps(["RESPONSE", "lead", lead_response]) + '\n'
 
@@ -470,7 +470,7 @@ def run_meeting(params):
             concluding_prompt = f"Lead: given the conersation that has taken place, summarize your findings into a report that follows the guidelines:{report_guidelines}"
             f"{report_guidelines}"
             f"Ensure the report clearly delivers on the main task. As a reminder, the task was {task}. Further, ensure the report must follow any specifics described in the expectations: {expectations}"
-            final_report = conversation.convo_prompt(agent_name="ProjectLead",prompt=concluding_prompt, draw_from_knowledge=draw_from_knowledge)
+            final_report = conversation.convo_prompt(agent_name="ProjectLead",prompt=concluding_prompt, draw_from_knowledge=draw_from_knowledge, temperature=temperature)
             #os.system('cls' if os.name == 'nt' else 'clear')
             
 

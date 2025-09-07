@@ -110,7 +110,8 @@ function ReportForm({name, task, lead, onErrorChange, onSelectFileChange, onRemo
             </Stepper>
             
                 {activeStep === 0 && (
-                    <Box>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, maxWidth: 1200 }}>
+
                         <TextField
                             label="Name"
                             variant="outlined"
@@ -152,7 +153,7 @@ function ReportForm({name, task, lead, onErrorChange, onSelectFileChange, onRemo
                 )}
                 {activeStep === 1 && (
                 
-                    <Box>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, maxWidth: 1200 }}>
                         <Box position="relative" width="100%">
                             <TextField
                                 label="Task"
@@ -248,7 +249,7 @@ function ReportForm({name, task, lead, onErrorChange, onSelectFileChange, onRemo
                     </Box>
                 )}
                 {activeStep == 2 && (
-                    <Box>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, maxWidth: 1200 }}>
                         {/* Lead Select */}
                         <FormControl fullWidth required>
                             <InputLabel>Lead</InputLabel>
@@ -324,7 +325,7 @@ function ReportForm({name, task, lead, onErrorChange, onSelectFileChange, onRemo
                         </Box>
                 )}
                 {activeStep == 3 && (
-                    <Box>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, maxWidth: 1200 }}>
                         <Box position="relative" width="100%" display="flex" gap={1}>
                             <Typography variant="body1" sx={{ mb: 1 }}>
                                 Choose from existing papers:
@@ -398,7 +399,7 @@ function ReportForm({name, task, lead, onErrorChange, onSelectFileChange, onRemo
                     </Box>
                 )}
                 {activeStep == 4 && (
-                    <Box>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, maxWidth: 1200 }}>
                         <TextField
                             label="Number of cycles (leave blank for 1, max is 4)"
                             variant="outlined"

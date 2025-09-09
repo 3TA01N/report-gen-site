@@ -5,7 +5,7 @@ function Logout() {
     useEffect(() => {
         (async () => {
             try {
-                const {data} = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/logout/`,{
+                await axios.post(`${import.meta.env.VITE_BACKEND_URL}/logout/`,{
                     refresh_token:localStorage.getItem('refresh_token')
                 } ,{headers: {
                     'Content-Type': 'application/json',

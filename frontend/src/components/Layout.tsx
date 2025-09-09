@@ -14,7 +14,7 @@ interface Props {
 export default function Layout({ children, ...props }: Props) {
     
     const [isLoggedIn, setLoggedIn] = useState<boolean | null>(null)
-    const [username, setUsername] = useState("")
+    const [, setUsername] = useState("")
     const navigate = useNavigate();
     const handleLogout = async () => {
         try{

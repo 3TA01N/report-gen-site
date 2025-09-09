@@ -4,7 +4,6 @@ import {
     Autocomplete,
     TextField,
     Box,
-    Typography,
     AutocompleteChangeReason,
     AutocompleteChangeDetails,
   } from '@mui/material';

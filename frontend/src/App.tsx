@@ -12,6 +12,7 @@ import Logout from './pages/Logout'
 import Register from './pages/Register'
 import Reports from './pages/Reports'
 import ReportPage from './pages/ReportPage'
+import VerifyEmail from './pages/VerifyEmail';
 import "./App.css"
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import theme from './components/theme';
@@ -36,6 +37,7 @@ function App() {
         <Route path="/leads/:name" element = {< LeadPage />} />
         <Route path="/agents/:name" element = {< AgentPage />} />
         <Route path="/reports/:name" element = {< ReportPage />} />
+        <Route path="/verify-email/:uid/:token" element = {< VerifyEmail />} />
       </Routes>
     </Layout>
     </ThemeProvider>

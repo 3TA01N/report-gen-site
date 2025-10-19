@@ -8,9 +8,13 @@ class UserLoginSerializer(serializers.Serializer):
 
     def validate(self, data):
         user = authenticate(**data)
-        if user and user.is_active:
-            return user
-        raise serializers.ValidationError("Incorrect credentials")
+        if not user:
+            raise serializers.ValidationError("Incorrect credentials")
+        if not user.is_active:
+            raise serializers.ValidationError("Account not verified. Check your email for a verify link.")
+        
+        return user
+        
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
@@ -37,7 +41,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         password = validated_data.pop("password1")
         validated_data.pop("password2")
 
-        return CustomUser.objects.create_user(password=password, **validated_data)
+        return CustomUser.objects.create_user(password=password, is_active=False, **validated_data)
 class PaperSerializer(serializers.ModelSerializer):
     class Meta:
         model = Paper

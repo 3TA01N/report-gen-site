@@ -32,8 +32,24 @@ function Login () {
             setError("Unknown error")
         }
     }
-    const handleNav = () => {
+    const handleNavReg = () => {
         navigate('/register');
+    }
+    const handleGuestLogin = async () => {
+        try {
+        const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/test-user/`)
+        const { tokens, username } = res.data;
+
+        localStorage.setItem("accessToken", tokens.access);
+        localStorage.setItem("refreshToken", tokens.refresh);
+        localStorage.setItem("username", username);
+        localStorage.setItem("isTemporary", "true");
+
+        navigate("/");
+        } catch (err) {
+        console.error("Guest login failed:", err);
+        alert("Failed to enter test mode. Please try again.");
+        }
     }
     const handleSubmit = async (e:any) => {
       e.preventDefault();
@@ -130,7 +146,7 @@ function Login () {
                 <Link
                     component="button"
                     variant="body2"
-                    onClick={handleNav}
+                    onClick={handleGuestLogin}
                     sx={{
                         display: 'block',
                         textAlign: 'center',
@@ -140,7 +156,22 @@ function Login () {
                         marginTop: 2,
                     }}
                 >
-                    Don’t have an account? Register
+                    Don’t have an account? Try out without registering!
+                </Link>
+                <Link
+                    component="button"
+                    variant="body2"
+                    onClick={handleNavReg}
+                    sx={{
+                        display: 'block',
+                        textAlign: 'center',
+                        color: 'primary.main',
+                        textDecoration: 'none',
+                        fontSize: '14px',
+                        marginTop: 2,
+                    }}
+                >
+                    Register
                 </Link>
             </Paper>
         </Container>

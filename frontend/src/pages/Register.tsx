@@ -9,6 +9,7 @@ function Register () {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false)
     const navigate = useNavigate();
+    const [displayVerify, setDisplayVerify] = useState(false)
     const [formData, setFormData] = useState({
         username: "",
         email: "",
@@ -18,10 +19,7 @@ function Register () {
     const handleNav = () => {
         navigate('/login');
     }
-    const [loginData, setLoginData] = useState({
-        email: "",
-        password: "",
-    })
+    
     const handleChange = (e:any) => {
         setFormData({
             ...formData,
@@ -46,12 +44,6 @@ function Register () {
         //console.log("Query params:", window.location.search);
     }, []);
     
-    useEffect(() => {
-        setLoginData({
-            email: formData.email,
-            password: formData.password1
-        })
-    },[formData]);
 
     const handleSubmit = async (e: any) => {
         e.preventDefault();
@@ -64,6 +56,10 @@ function Register () {
             //register
             console.log("starting register response");
             await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/register/`, formData);
+
+            //verify
+            setDisplayVerify(true)
+            /*
 
             //login
             const res = await api.post(`/login/`, loginData);
@@ -90,7 +86,7 @@ function Register () {
                     navigate("/");
                     window.location.reload();
                 })(),
-            ]);
+            ]);*/
             
         } catch (err) {
             console.error("Error during registration flow:", err);
@@ -101,6 +97,19 @@ function Register () {
     };
     return (
         <Container component="main" maxWidth="xs" sx={{paddingTop: 2}}>
+            {displayVerify ? (
+                <Paper
+                    sx={{
+                        borderRadius: 0,
+                        padding: 3,
+                        textAlign: "center",
+                    }}
+                >
+                    <Typography variant="h6">
+                        Check your email for a verification link from report-gen03@gmail.com
+                    </Typography>
+                </Paper>
+            ) : (
             <Paper
                 sx={{
                     borderRadius: 0,
@@ -191,6 +200,7 @@ function Register () {
                     </Link>
                 </Box>
             </Paper>
+            )}
         </Container>
         
     )

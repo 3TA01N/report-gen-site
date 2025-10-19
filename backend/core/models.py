@@ -9,6 +9,7 @@ class CustomUser(AbstractUser):
     daily_output_token_count = models.IntegerField(default=0)
     USERNAME_FIELD="email"
     REQUIRED_FIELDS=["username"]
+    is_temporary = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return self.email

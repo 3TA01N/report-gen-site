@@ -1,6 +1,6 @@
 from rest_framework import viewsets, status
 from .serializers import AgentSerializer, ReportSerializer, PaperSerializer, TeamLeadSerializer, UserLoginSerializer, UserRegistrationSerializer, CustomUserSerializer 
-from .models import Agent, Report, Paper, TeamLead, TokenUsage
+from .models import Agent, Report, Paper, TeamLead, TokenUsage, CustomUser
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
@@ -11,6 +11,11 @@ import psutil
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from django.utils.timezone import now
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.core.mail import send_mail
+from django.contrib.sites.shortcuts import get_current_site
+from .utils import account_activation_token
 from django.core.files.storage import default_storage
 import traceback
 from reportsite.storage_backends import PrivateMediaStorage
@@ -37,10 +42,34 @@ from rest_framework.generics import GenericAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from memory_profiler import profile
+import uuid
 
-# Create your views here.
 
+class TestModeAPIView(GenericAPIView):
+    permission_classes = (AllowAny,)
 
+    def post(self, request, *args, **kwargs):
+        username = f"guest_{uuid.uuid4().hex[:8]}"
+        email = f"{uuid.uuid4().hex[:8]}@temp.local"
+
+        user = CustomUser.objects.create_user(
+            username=username,
+            email=email,
+            password=None,
+            is_temporary=True,
+        )
+
+        refresh = RefreshToken.for_user(user)
+        data = {
+            "username": user.username,
+            "temporary": True,
+            "tokens": {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            },
+        }
+
+        return Response(data, status=200)
 def log_memory_usage(label):
     process = psutil.Process(os.getpid())
     mem = process.memory_info().rss / 1024 / 1024  # in MB
@@ -96,16 +125,58 @@ class userRegistrationAPIView(GenericAPIView):
         #log_memory_usage("Before regis logic")
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        token = RefreshToken.for_user(user)
-        data = serializer.data
-        data["tokens"] = {"refresh":str(token),
-                          "access": str(token.access_token)
-                          }
-        #log_memory_usage("Before regis resp")
+        try:
+            with transaction.atomic():
+                user = serializer.save()
 
-        #create default agent, and default lead
-        return Response(data, status=status.HTTP_201_CREATED)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                token = account_activation_token.make_token(user)
+                domain = get_current_site(request).domain
+                link = f"http://{domain}/verify-email/{uid}/{token}/"
+
+                # send email
+                send_mail(
+                    "Verify your email",
+                    f"Hi {user.username},\n\nClick the link below to verify your account:\n{link}",
+                    "report.gen.app03@gmail.com",
+                    [user.email],
+                    fail_silently=False,
+                )
+
+        except Exception as e:
+            return Response(
+                {"error": f"Registration failed: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        return Response(
+                {"message": "Registration successful. Please check your email to verify your account."},
+                status=status.HTTP_201_CREATED,
+            )
+
+from django.utils.http import urlsafe_base64_decode
+
+class ActivateUserView(GenericAPIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request, uidb64, token):
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = CustomUser.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+            user = None
+
+        if user and account_activation_token.check_token(user, token):
+            user.is_active = True
+            user.save()
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "message": "Account verified",
+                "access": str(refresh.access_token),
+                "refresh": str(refresh)
+            }, status=status.HTTP_200_OK)
+
+        return Response({"error": "Invalid or expired token."}, status=400)
+    
 class AgentView(viewsets.ModelViewSet):
     serializer_class = AgentSerializer
     permission_classes = [IsAuthenticated]

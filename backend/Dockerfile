@@ -43,6 +43,8 @@ COPY --chown=appuser:appuser . .
 #copy cron req
 COPY etc/crontab /app/etc/crontab
 COPY reset_tokens.sh /app/reset_tokens.sh
+COPY del_guests.sh /app/del_guests.sh
+
 COPY run.sh /app/run.sh
 RUN chmod +x /app/*.sh
 CMD ["/app/run.sh"]

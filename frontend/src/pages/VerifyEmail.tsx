@@ -1,7 +1,7 @@
 import axios from "axios";
 import {useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom";
-import {Container, Paper, Typography, Link} from '@mui/material';
+import {Container, Paper, Typography} from '@mui/material';
 function VerifyEmail() {
     const { uid, token } = useParams();
     const [dispMessage, setDispMessage] = useState("")

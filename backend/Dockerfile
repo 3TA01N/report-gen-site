@@ -4,7 +4,7 @@ FROM python:3.11-slim AS builder
 # Install build dependencies only for compilation
 RUN apt-get update && apt-get install -y \
     build-essential gcc g++ make clang \
-    libatlas-base-dev liblapack-dev libopenblas-dev \
+    libblas-dev liblapack-dev libopenblas-dev \
     libfreetype6-dev pkg-config libpng-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 

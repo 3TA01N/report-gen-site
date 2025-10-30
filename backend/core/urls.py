@@ -9,6 +9,7 @@ router.register(r'papers', PaperView, 'papers')
 router.register(r'leads', TeamLeadView, 'teamleads')
 router.register(r'reports', ReportView, 'reports')
 urlpatterns = [
+    path('ping/', ping),
     path('', include(router.urls)),
     path("register/", userRegistrationAPIView.as_view(), name = "register-user"),
     path("login/", UserLoginAPIView.as_view(), name = "login-user"),

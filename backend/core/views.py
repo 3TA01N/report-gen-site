@@ -44,6 +44,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from memory_profiler import profile
 import uuid
 
+from django.http import HttpResponse
+
+def ping(request):
+    return HttpResponse("pong")
+
 
 class TestModeAPIView(GenericAPIView):
     permission_classes = (AllowAny,)
